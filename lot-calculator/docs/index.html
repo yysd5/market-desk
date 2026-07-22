@@ -46,7 +46,7 @@ html[data-theme="dark"]{
   display:flex;align-items:center;gap:.7rem;height:44px;
   padding:0 clamp(14px,3vw,24px);
   background:var(--surface);border-bottom:1px solid var(--rule);
-  font-family:var(--font-mono);font-size:11.5px;position:relative;z-index:60;
+  font-family:var(--font-mono);font-size:11.5px;position:sticky;top:0;z-index:60;
 }
 .site-home{
   display:inline-flex;align-items:center;gap:.45rem;flex:none;
@@ -111,7 +111,7 @@ nav.toc li{margin:.15rem 0}
 nav.toc a{color:var(--ink-2);text-decoration:none;text-underline-offset:3px}
 nav.toc a:hover{color:var(--ink);text-decoration:underline}
 
-section{margin-bottom:2.6rem;scroll-margin-top:60px}
+section{margin-bottom:2.6rem;scroll-margin-top:104px}
 h2{font-family:var(--font-disp);font-weight:700;font-size:21px;letter-spacing:.01em;
   margin:0 0 .2rem;display:flex;align-items:center;gap:.8rem}
 h2::after{content:"";flex:1;height:1px;background:var(--rule-soft)}
