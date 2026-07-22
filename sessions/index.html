@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FX 24時間サイクル & アノマリー ｜ JST基準リファレンス</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ========== market-desk 共通トークン ========== */
+:root{
+  --paper:#E7EAEE; --surface:#FFFFFF; --surface-2:#F2F4F7;
+  --ink:#0F1A24; --ink-2:#4C5A69; --ink-3:#7A8794;
+  --rule:#C8CFD8; --rule-soft:#DEE3EA;
+  --signal:#B33A30; --watch:#12776A; --ok:#15784C; --warn-c:#8A5300;
+  --tokyo:#C9871F; --london:#3272A8; --newyork:#6A57C8; --gold-c:#B08010;
+  /* 帯・スウォッチ用の固定色（濃色面に暗い文字を載せるためテーマ非依存） */
+  --bar-tk:#E8A24C; --bar-ld:#46B7C9; --bar-ny:#B07BE6;
+  --on-accent:#10151B;
+  --font-disp:var(--font-body);
+  --font-body:"Zen Kaku Gothic New",-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){ html:not([data-theme="light"]){
+    --paper:#0F141A; --surface:#171E26; --surface-2:#1E2731;
+    --ink:#DCE4EC; --ink-2:#93A2B2; --ink-3:#6C7B8B;
+    --rule:#2B3540; --rule-soft:#222B35;
+    --signal:#E0736A; --watch:#3EB5A0; --ok:#46C98C; --warn-c:#E6B652;
+    --tokyo:#E0A94A; --london:#5C9FD6; --newyork:#9385E8; --gold-c:#E8C05A;
+    color-scheme:dark;
+}}
+html[data-theme="dark"]{
+    --paper:#0F141A; --surface:#171E26; --surface-2:#1E2731;
+    --ink:#DCE4EC; --ink-2:#93A2B2; --ink-3:#6C7B8B;
+    --rule:#2B3540; --rule-soft:#222B35;
+    --signal:#E0736A; --watch:#3EB5A0; --ok:#46C98C; --warn-c:#E6B652;
+    --tokyo:#E0A94A; --london:#5C9FD6; --newyork:#9385E8; --gold-c:#E8C05A;
+    color-scheme:dark;
+}
+
+/* ========== サイトバー ========== */
+.site-bar{
+  display:flex;align-items:center;gap:.7rem;height:44px;
+  padding:0 clamp(14px,3vw,24px);
+  background:var(--surface);border-bottom:1px solid var(--rule);
+  font-family:var(--font-mono);font-size:11.5px;position:relative;z-index:60;
+}
+.site-home{
+  display:inline-flex;align-items:center;gap:.45rem;flex:none;
+  color:var(--ink-2);text-decoration:none;letter-spacing:.06em;font-weight:500;
+}
+.site-home:hover{color:var(--ink)}
+.site-home svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;transition:transform .14s}
+.site-home:hover svg{transform:translateX(-2px)}
+.site-home .dot{color:var(--signal)}
+.site-here{
+  color:var(--ink-3);font-family:var(--font-body);font-size:11.5px;
+  padding-left:.7rem;border-left:1px solid var(--rule-soft);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+}
+.site-here a{color:var(--ink-2);text-decoration:none}
+.site-here a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.site-theme{
+  margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:.4rem;
+  border:1px solid var(--rule);background:var(--surface-2);color:var(--ink-2);
+  border-radius:100px;padding:.24rem .62rem;cursor:pointer;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;
+  transition:border-color .12s,color .12s;
+}
+.site-theme:hover{border-color:var(--ink-3);color:var(--ink)}
+.site-theme .ic{display:inline-flex;width:13px;height:13px}
+.site-theme .ic svg{display:block;width:13px;height:13px}
+.site-bar :focus-visible{outline:2px solid var(--signal);outline-offset:3px;border-radius:3px}
+@media(max-width:520px){ .site-here{display:none} }
+@media print{ .site-bar{display:none} }
+
+  /* ページ固有エイリアス（共通トークンから導出） */
+  :root{
+    --panel:var(--surface); --panel2:var(--surface-2); --line:var(--rule);
+    --tx:var(--ink); --mut:var(--ink-2); --dim:var(--ink-3);
+    --ny:var(--newyork); --gold:var(--gold-c); --flow:var(--signal); --ind:var(--ok);
+    --disp:var(--font-disp); --body:var(--font-body); --mono:var(--font-mono);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:
+      radial-gradient(1200px 500px at 15% -10%, rgba(232,162,76,.06), transparent 60%),
+      radial-gradient(1000px 500px at 85% 0%, rgba(176,123,230,.07), transparent 55%),
+      var(--paper);
+    color:var(--tx);font-family:var(--body);line-height:1.65;
+    font-size:15px;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:940px;margin:0 auto;padding:26px 18px 70px}
+  body>.site-bar+.wrap{padding-top:22px}
+  header{margin-bottom:26px}
+  .kicker{font-family:var(--mono);font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);margin-bottom:12px}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(26px,6.5vw,42px);line-height:1.08;letter-spacing:-.01em;margin:0 0 12px}
+  h1 .ac{color:var(--tokyo)}
+  .lede{color:var(--mut);max-width:60ch;margin:0}
+  .lede b{color:var(--tx);font-weight:600}
+  .toggle{display:inline-flex;gap:4px;margin:20px 0 4px;padding:4px;background:var(--panel);border:1px solid var(--line);border-radius:999px}
+  .toggle button{font-family:var(--mono);font-size:12.5px;font-weight:600;letter-spacing:.02em;color:var(--mut);background:transparent;border:0;padding:8px 16px;border-radius:999px;cursor:pointer;transition:.18s}
+  .toggle button.on{color:var(--on-accent);background:var(--tokyo)}
+  .toggle button.on.win{background:var(--bar-ld);color:#fff}
+  .toggle-note{font-family:var(--mono);font-size:11.5px;color:var(--dim);margin:6px 0 0}
+  section{margin-top:40px}
+  .eyebrow{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut);margin-bottom:16px}
+  .eyebrow .no{color:var(--tokyo)}
+  .eyebrow::after{content:"";flex:1;height:1px;background:var(--line)}
+  h2{font-family:var(--disp);font-weight:700;font-size:22px;letter-spacing:-.01em;margin:0 0 14px}
+  h3{font-family:var(--disp);font-weight:700;font-size:16px;margin:22px 0 6px;color:var(--tx)}
+  p{margin:0 0 12px}
+  .muted{color:var(--mut)}
+  b.k{color:var(--tx);font-weight:600}
+  /* ribbon */
+  .ribbon-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px 18px 16px;overflow:hidden}
+  .legend{display:flex;flex-wrap:wrap;gap:12px 18px;margin-bottom:8px;font-size:12.5px;color:var(--mut)}
+  .legend span{display:inline-flex;align-items:center;gap:7px}
+  .swatch{width:14px;height:10px;border-radius:3px;display:inline-block}
+  .sw-tk{background:var(--bar-tk)}.sw-ld{background:var(--bar-ld)}.sw-ny{background:var(--bar-ny)}
+  .sw-ov{background:repeating-linear-gradient(45deg,var(--gold),var(--gold) 3px,transparent 3px,transparent 6px);border:1px solid var(--gold)}
+  .sw-fx{width:2px;height:13px;background:var(--flow);border-radius:2px}
+  .sw-ind{width:2px;height:13px;background:var(--ind);border-radius:2px}
+  .lanes{position:relative;margin-top:26px}
+  .lanewrap{position:relative;height:46px}
+  .lane-label{position:absolute;top:0;left:0;font-family:var(--mono);font-size:10px;letter-spacing:.08em;color:var(--mut);text-transform:uppercase}
+  .lane-bg{position:absolute;top:18px;left:0;right:0;height:26px;border-radius:6px;background:color-mix(in srgb,var(--ink) 6%,transparent)}
+  .bar{position:absolute;top:18px;height:26px;border-radius:6px;display:flex;align-items:center;padding-left:9px;font-family:var(--mono);font-size:10.5px;font-weight:600;color:var(--on-accent);white-space:nowrap;overflow:hidden;z-index:1}
+  .bar.tk{background:linear-gradient(90deg,var(--bar-tk),#F0B56B)}
+  .bar.ld{background:linear-gradient(90deg,var(--bar-ld),#63C7D6)}
+  .bar.ny{background:linear-gradient(90deg,var(--bar-ny),#C093EC)}
+  .overlay{position:absolute;top:18px;bottom:2px;border-radius:6px;background:repeating-linear-gradient(45deg,rgba(242,201,76,.20),rgba(242,201,76,.20) 4px,transparent 4px,transparent 8px);border:1px solid rgba(242,201,76,.6);pointer-events:none;z-index:2}
+  .overlay-cap{position:absolute;top:-15px;font-family:var(--mono);font-size:10px;font-weight:600;color:var(--gold);white-space:nowrap;z-index:3}
+  /* marker rows (fixings / indicators) */
+  .mrow{position:relative;margin-top:8px}
+  .mrow-cap{font-family:var(--mono);font-size:9.5px;letter-spacing:.05em;color:var(--dim);text-transform:uppercase;margin-bottom:2px}
+  .ticks{position:relative;height:58px}
+  .tk-mark{position:absolute;top:0;width:2px;height:16px;transform:translateX(-1px);z-index:1}
+  .tk-mark .lab{position:absolute;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:9px;line-height:1.2;white-space:nowrap;text-align:center}
+  .tk-mark.r0 .lab{top:18px}
+  .tk-mark.r1{height:34px}.tk-mark.r1 .lab{top:36px}
+  .tk-mark.edge .lab{left:auto;right:0;transform:none;text-align:right}
+  .tk-mark.fx{background:var(--flow)} .tk-mark.fx .lab{color:var(--flow)}
+  .tk-mark.fx.close{background:var(--tx)} .tk-mark.fx.close .lab{color:var(--tx)}
+  .tk-mark.in{background:var(--ind)} .tk-mark.in .lab{color:var(--ind)}
+  .axis{position:relative;height:20px;margin-top:2px;border-top:1px solid var(--line)}
+  .atk{position:absolute;top:4px;transform:translateX(-50%);font-family:var(--mono);font-size:10px;color:var(--dim)}
+  .atk::before{content:"";position:absolute;top:-9px;left:50%;width:1px;height:5px;background:var(--line)}
+  /* table */
+  .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+  table{border-collapse:collapse;width:100%;min-width:560px;font-size:13.5px}
+  thead th{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);text-align:left;padding:13px 14px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;background:var(--panel2)}
+  tbody td{padding:12px 14px;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+  tbody tr:last-child td{border-bottom:0}
+  .ev{font-weight:600;color:var(--tx)}
+  td.j{font-family:var(--mono);font-weight:600;white-space:nowrap}
+  td.j.sum{color:var(--tokyo)} td.j.win{color:var(--london)}
+  td.loc{font-family:var(--mono);color:var(--mut);white-space:nowrap;font-size:12.5px}
+  td.note{color:var(--mut);font-size:12.5px;min-width:170px}
+  td.freq{color:var(--mut);font-size:12.5px;white-space:nowrap}
+  tr.zone-tk td.ev{border-left:3px solid var(--bar-tk);padding-left:11px}
+  tr.zone-ld td.ev{border-left:3px solid var(--bar-ld);padding-left:11px}
+  tr.zone-ny td.ev{border-left:3px solid var(--bar-ny);padding-left:11px}
+  tr.zone-us td.ev{border-left:3px solid var(--ind);padding-left:11px}
+  tr.zone-eu td.ev{border-left:3px solid var(--bar-ld);padding-left:11px}
+  tr.hi{background:color-mix(in srgb,var(--gold-c) 10%,transparent)}
+  tr.hi td.ev{border-left:3px solid var(--gold);padding-left:11px}
+  tr.sub td{background:var(--panel2);font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);padding:9px 14px}
+  /* cards */
+  .cards{display:grid;gap:14px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px}
+  .card .ctop{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:8px}
+  .card h3{margin:0;font-size:16.5px}
+  .strength{font-family:var(--mono);font-size:10px;letter-spacing:.05em;padding:4px 9px;border-radius:999px;white-space:nowrap;flex-shrink:0;border:1px solid}
+  .s-struct{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,transparent);background:color-mix(in srgb,var(--ok) 10%,transparent)}
+  .s-mid{color:var(--gold);border-color:rgba(242,201,76,.35);background:rgba(242,201,76,.07)}
+  .s-weak{color:var(--flow);border-color:rgba(239,107,107,.35);background:rgba(239,107,107,.07)}
+  .card .row{margin:8px 0 0}
+  .card .row .kk{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:2px}
+  .card .row .v{color:var(--tx);font-size:13.5px}
+  .card .row .v.warn{color:var(--mut)}
+  .callout{border:1px solid var(--line);border-left:3px solid var(--gold);background:var(--panel);border-radius:0 12px 12px 0;padding:16px 18px;margin:18px 0}
+  .callout .t{font-family:var(--disp);font-weight:700;margin-bottom:6px;color:var(--gold)}
+  .src{font-size:12.5px;color:var(--mut)}
+  .src a{color:var(--london);text-decoration:none;word-break:break-all}
+  .src a:hover{text-decoration:underline}
+  .src li{margin-bottom:9px}
+  ul.clean{padding-left:18px;margin:0 0 12px}
+  ul.clean li{margin-bottom:6px}
+  .foot{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;color:var(--dim);font-family:var(--mono)}
+  @media(max-width:560px){
+    .wrap{padding:22px 14px 60px}
+    .lane-label{font-size:9px}
+    .bar{font-size:9px;padding-left:5px}
+    .tk-mark .lab{font-size:8px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<script>/* 描画前にテーマを適用（ちらつき防止） */
+(function(){try{var t=localStorage.getItem('md-theme');
+if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
+</head>
+<body>
+<nav class="site-bar" aria-label="サイト"><a class="site-home" href="../"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H6M11 6l-6 6 6 6"/></svg>market<span class="dot">·</span>desk</a><span class="site-here">セッションとアノマリー</span><button class="site-theme" id="mdTheme" type="button" title="テーマ切替：自動 / ライト / ダーク" aria-label="テーマ切替"><span class="ic" id="mdThemeIc"></span><span id="mdThemeLbl">自動</span></button></nav>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">FX Market Clock ／ JST Reference</div>
+    <h1>FX 24時間サイクル<br>＆ <span class="ac">アノマリー</span></h1>
+    <p class="lede">東京→ロンドン→ニューヨークと引き継がれる為替の1日を、<b>日本時間（JST）基準</b>で整理したリファレンス。時刻はすべて<b>夏時間・冬時間の両方を併記</b>し、<b>米・欧の主要経済指標</b>も重ねています。FXはOTC（相対）市場で24時間動くため、以下の「セッション」は取引所の営業時間ではなく<b>各金融センターが活況になる時間帯の慣習的な目安</b>です。</p>
+
+    <div class="toggle" id="toggle">
+      <button id="btnSum" class="on" data-season="summer">☀ 夏時間</button>
+      <button id="btnWin" data-season="winter">❄ 冬時間</button>
+    </div>
+    <p class="toggle-note" id="dstNote"></p>
+  </header>
+
+  <!-- ============ RIBBON ============ -->
+  <section>
+    <div class="eyebrow"><span class="no">01</span> 24時間セッション帯＋指標</div>
+    <div class="ribbon-card">
+      <div class="legend">
+        <span><i class="swatch sw-tk"></i>東京</span>
+        <span><i class="swatch sw-ld"></i>ロンドン</span>
+        <span><i class="swatch sw-ny"></i>NY</span>
+        <span><i class="swatch sw-ov"></i>ロンドン×NY重複＝最高流動性</span>
+        <span><i class="swatch sw-fx"></i>フィックス／節目</span>
+        <span><i class="swatch sw-ind"></i>米指標クラスタ</span>
+      </div>
+      <div class="lanes" id="lanes"></div>
+      <div class="mrow"><div class="mrow-cap">フィックス・節目</div><div class="ticks" id="fixings"></div></div>
+      <div class="mrow"><div class="mrow-cap">米経済指標（JST・発表が集中する時刻）</div><div class="ticks" id="indis"></div></div>
+      <div class="axis" id="axis"></div>
+    </div>
+    <p class="muted" style="margin-top:12px;font-size:13px">横軸は東京の0:00から翌朝のNYクローズまでを一直線に並べたJSTタイムラインです（切替ボタンで夏／冬が入れ替わります）。金・青のバーが重なる<span style="color:var(--gold)">黄色の網掛け帯</span>がロンドンとNYが同時に開く流動性のピーク。<span style="color:var(--flow)">赤</span>＝フィックス／節目、<span style="color:var(--ind)">緑</span>＝米指標の集中時刻です。</p>
+  </section>
+
+  <!-- ============ TABLE: cycle ============ -->
+  <section>
+    <div class="eyebrow"><span class="no">02</span> タイムライン一覧（夏／冬併記）</div>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>イベント</th><th>現地時刻</th><th>JST（夏）</th><th>JST（冬）</th><th>補足</th></tr></thead>
+        <tbody>
+          <tr class="zone-tk"><td class="ev">東京市場コア</td><td class="loc">東京 09:00–15:00</td><td class="j sum">09:00–15:00</td><td class="j win">09:00–15:00</td><td class="note">日本勢中心。相対的に低ボラで、レンジになりやすい</td></tr>
+          <tr class="zone-tk"><td class="ev">仲値（TTM）決定</td><td class="loc">東京 09:55</td><td class="j sum">09:55</td><td class="j win">09:55</td><td class="note">対顧客の基準レート確定。ゴトー日アノマリーの核（→§05）</td></tr>
+          <tr class="zone-tk"><td class="ev">東京カット（option cut）</td><td class="loc">東京 15:00</td><td class="j sum">15:00</td><td class="j win">15:00</td><td class="note">東京時間のFXオプション期日</td></tr>
+          <tr class="zone-ld"><td class="ev">ロンドン・オープン</td><td class="loc">London 08:00</td><td class="j sum">16:00</td><td class="j win">17:00</td><td class="note">流動性が一段増す起点</td></tr>
+          <tr class="zone-ny"><td class="ev">NY・オープン</td><td class="loc">NY 08:00</td><td class="j sum">21:00</td><td class="j win">22:00</td><td class="note">米勢参入。ロンドンと重なり流動性ピークへ</td></tr>
+          <tr class="hi"><td class="ev">ロンドン×NY 重複帯</td><td class="loc">最高流動性</td><td class="j sum">21:00–01:00</td><td class="j win">22:00–02:00</td><td class="note">1日で最も出来高が厚い。特に濃いのは最初の約3時間。あなたのデイトレ窓（21–24時JST・夏）が芯にある</td></tr>
+          <tr class="zone-ny"><td class="ev">NYオプションカット</td><td class="loc">NY 10:00</td><td class="j sum">23:00</td><td class="j win">24:00</td><td class="note">"New York cut"。大きな期日ではストライクへピン止め</td></tr>
+          <tr class="zone-ld"><td class="ev">WMR 4pm ロンドン・フィックス</td><td class="loc">London 16:00</td><td class="j sum">24:00</td><td class="j win">01:00</td><td class="note">世界の指標フィックス。月末はリバランスでフロー集中（→§05）</td></tr>
+          <tr class="zone-ld"><td class="ev">ロンドン・クローズ目安</td><td class="loc">London 17:00</td><td class="j sum">01:00</td><td class="j win">02:00</td><td class="note">欧州勢が退出。以降は米単独の時間帯</td></tr>
+          <tr class="zone-ny"><td class="ev">NYクローズ（日替わり）</td><td class="loc">NY 17:00</td><td class="j sum">翌 06:00</td><td class="j win">翌 07:00</td><td class="note">FXの1日の区切り。日足の始値/終値・スワップ付与の基準（→§04）</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="toggle-note" style="margin-top:10px">※ スマホでは横スクロール。現地時刻は慣習的な目安で、業者・情報源により多少前後します。</p>
+  </section>
+
+  <!-- ============ TABLE: indicators ============ -->
+  <section>
+    <div class="eyebrow"><span class="no">03</span> 主要経済指標の時刻（JST・夏/冬）</div>
+    <p class="muted" style="margin-bottom:14px">為替を最も動かすのは米指標。<b class="k">米指標のJSTは米国のサマータイムに連動</b>し、欧州指標は欧州のサマータイムに連動します。両地域の切替日はズレるため、年2回の「ねじれ期間」（→§04）では下表と1時間ズレる点に注意。</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>指標／イベント</th><th>発表（現地）</th><th>JST（夏）</th><th>JST（冬）</th><th>頻度</th></tr></thead>
+        <tbody>
+          <tr class="sub"><td colspan="5">米国（ET基準・夏=EDT／冬=EST）</td></tr>
+          <tr class="zone-us"><td class="ev">ADP雇用</td><td class="loc">08:15 ET</td><td class="j sum">21:15</td><td class="j win">22:15</td><td class="freq">月次（水）</td></tr>
+          <tr class="zone-us"><td class="ev">雇用統計（NFP・失業率）</td><td class="loc">08:30 ET</td><td class="j sum">21:30</td><td class="j win">22:30</td><td class="freq">月次・原則第1金曜</td></tr>
+          <tr class="zone-us"><td class="ev">CPI ／ PPI</td><td class="loc">08:30 ET</td><td class="j sum">21:30</td><td class="j win">22:30</td><td class="freq">月次</td></tr>
+          <tr class="zone-us"><td class="ev">小売売上高 ／ GDP ／ PCE</td><td class="loc">08:30 ET</td><td class="j sum">21:30</td><td class="j win">22:30</td><td class="freq">月次</td></tr>
+          <tr class="zone-us"><td class="ev">新規失業保険申請</td><td class="loc">08:30 ET</td><td class="j sum">21:30</td><td class="j win">22:30</td><td class="freq">毎週木</td></tr>
+          <tr class="zone-us"><td class="ev">ISM製造業／非製造業・JOLTS・消費者信頼感</td><td class="loc">10:00 ET</td><td class="j sum">23:00</td><td class="j win">24:00</td><td class="freq">月次</td></tr>
+          <tr class="zone-us"><td class="ev">EIA原油在庫</td><td class="loc">10:30 ET</td><td class="j sum">23:30</td><td class="j win">24:30</td><td class="freq">毎週水</td></tr>
+          <tr class="zone-us"><td class="ev">FOMC 政策金利（声明）</td><td class="loc">14:00 ET</td><td class="j sum">翌 03:00</td><td class="j win">翌 04:00</td><td class="freq">年8回</td></tr>
+          <tr class="zone-us"><td class="ev">FOMC 議長会見</td><td class="loc">14:30 ET</td><td class="j sum">翌 03:30</td><td class="j win">翌 04:30</td><td class="freq">会合時</td></tr>
+          <tr class="sub"><td colspan="5">欧州・英国（欧州の夏/冬に連動）</td></tr>
+          <tr class="zone-eu"><td class="ev">英 CPI ／ 雇用（ONS）</td><td class="loc">07:00 London</td><td class="j sum">15:00</td><td class="j win">16:00</td><td class="freq">月次</td></tr>
+          <tr class="zone-eu"><td class="ev">BOE 政策金利</td><td class="loc">12:00 London</td><td class="j sum">20:00</td><td class="j win">21:00</td><td class="freq">年8回（木）</td></tr>
+          <tr class="zone-eu"><td class="ev">ECB 政策金利（発表）</td><td class="loc">14:15 CET</td><td class="j sum">21:15</td><td class="j win">22:15</td><td class="freq">年8回（木）</td></tr>
+          <tr class="zone-eu"><td class="ev">ECB 会見</td><td class="loc">14:45 CET</td><td class="j sum">21:45</td><td class="j win">22:45</td><td class="freq">会合時</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="toggle-note" style="margin-top:10px">※ 米の8:30 ET群（雇用統計・CPI等）はあなたのデイトレ窓の入口（夏21:30／冬22:30）に集中。FOMCは窓の後・深夜帯（夏翌3:00／冬翌4:00）です。個別の開催日は各公式カレンダーで確認を（→§07）。</p>
+  </section>
+
+  <!-- ============ EXPLANATIONS ============ -->
+  <section>
+    <div class="eyebrow"><span class="no">04</span> 各時間帯の読み方（表の外の解説）</div>
+
+    <h3>東京（アジア）— 09:00〜15:00 JST</h3>
+    <p class="muted">日本・アジア勢が主役。ロンドン勢が入る前で参加者が限られるため、方向感が出にくく<b class="k">レンジ〜緩やかなトレンド</b>になりやすいのが基本性格です。ただし本邦の実需フロー（仲値）や要人発言、アジア株・中国指標で大きく動く日もあります。</p>
+
+    <h3>仲値（なかね／TTM）— 09:55 JST</h3>
+    <p class="muted">銀行がその日の対顧客取引の基準レートを確定させる時刻。輸出入企業などの実需決済がこの時刻に集中するため、ドル円では<b class="k">9:55に向けてドル買い（円安）に振れやすい</b>という偏りが知られています。FSBの報告書でも、各金融機関が顧客注文を集約し東京時間9:55前後に単一レートで執行する仕組みが明記されています。これがゴトー日アノマリー（§05）の土台です。</p>
+
+    <h3>ロンドン（欧州）— 16:00/17:00 JST 〜</h3>
+    <p class="muted">世界のFX売買の約4割が英国の拠点を経由する、最大の取引センターです（BIS 2025）。ここで一気に流動性が増し、その日の本格的なトレンドが始まることが多い。</p>
+
+    <h3>ロンドン×NY 重複帯 — あなたの主戦場</h3>
+    <div class="callout">
+      <div class="t">夏 21:00–01:00／冬 22:00–02:00 JST（特に濃いのは最初の約3時間）</div>
+      <p class="muted" style="margin:0">ロンドンとNYが同時に開くこの時間帯が、1日で<b class="k">最も出来高が厚く・スプレッドが締まり・トレンドが素直に伸びやすい</b>。あなたのデイトレ窓（21:00–24:00 JST）は、夏時間ならこの重複帯の芯にほぼ完全に収まります。冬時間は全体が1時間後ろにずれるので、同じ手法でも<b class="k">開始を22:00起点に読み替える</b>と整合します。米の8:30 ET指標（夏21:30／冬22:30）はちょうどこの窓の入口で出ます。</p>
+    </div>
+
+    <h3>NYクローズ — 翌 06:00/07:00 JST（日足の区切り）</h3>
+    <p class="muted">NY 17:00がFXの「1日」の終わり＝翌日の始まりで、日足ロウソクの区切りとスワップ付与の基準です。米国の夏時間に連動するため、<b class="k">日足の切り替わりは夏06:00／冬07:00 JST</b>とズレます。多くのチャート（OANDAを含む）が既定でこのNY 17:00を日足境界にしていますが、業者ごとに設定が異なる場合があるので、日足の始値・ヒゲに依存する検証では<b class="k">自分の執行業者の区切りを必ず確認</b>してください。</p>
+
+    <h3>夏時間・冬時間の「ねじれ」に注意</h3>
+    <p class="muted">米国とロンドン/EUは切替日が違うため、年2回、想定とズレる期間が生じます（2026年）:</p>
+    <ul class="clean muted">
+      <li><b class="k">3/8〜3/28</b>：米だけ夏時間入り（ロンドンはまだ冬）。米指標・NY勢が通常より1時間早い。</li>
+      <li><b class="k">10/25〜10/31</b>：ロンドン/EUが先に冬時間へ。欧州系だけ1時間後ろ、米はまだ夏。</li>
+    </ul>
+    <p class="muted">日本（JST）は年間 UTC+9 固定で切替なし。上の各表の「夏／冬」は、<b class="k">両地域がそろって夏／冬になっている大半の期間</b>の値です。</p>
+  </section>
+
+  <!-- ============ ANOMALIES ============ -->
+  <section>
+    <div class="eyebrow"><span class="no">05</span> 主なアノマリー</div>
+    <p class="muted" style="margin-bottom:18px">「強度」は、値動きの背後に<b class="k">実需・制度という構造的な原因</b>があるか（＝再現性が期待できるか）の目安。<span style="color:var(--ok)">構造的</span>＝仕組みで説明できる／<span style="color:var(--gold)">限定的</span>＝条件付き・減衰／<span style="color:var(--flow)">俗説寄り</span>＝統計的根拠が弱い。いずれも単体では優位性にならず、スプレッド・スリッページを引いた実効ベースで自分のデータ検証が前提です。</p>
+    <div class="cards">
+
+      <div class="card">
+        <div class="ctop"><h3>ゴトー日 × 仲値</h3><span class="strength s-mid">限定的</span></div>
+        <div class="row"><span class="kk">仕組み</span><span class="v">5・10のつく日（5/10/15/20/25/30）は輸入企業のドル決済が集中しやすく、9:55の仲値に向けてドル円が上昇（円安）に振れやすい。神戸大の学術検証では、特に<b>「金曜かつゴトー日」で偏りが強い</b>ことが統計的に確認されています。</span></div>
+        <div class="row"><span class="kk">注意</span><span class="v warn">①公知の手法で近年は効き目が縮小、②スプレッド/スリッページで実効優位はさらに薄い、③仲値後（9:55以降）はむしろ反転（円高）しやすいとの検証もある。思考停止での固定運用は危険。</span></div>
+      </div>
+
+      <div class="card">
+        <div class="ctop"><h3>WMR 4pm ロンドン・フィックス</h3><span class="strength s-struct">構造的</span></div>
+        <div class="row"><span class="kk">仕組み</span><span class="v">世界の株・債券指数が参照する事実上の標準フィックス（FSB 2014が「圧倒的に支配的」と明記）。指数連動フローがこの1点に集約され、16:00ロンドン前後で<b>ボラと値幅が明確に増大</b>（学術研究でも確認）。特に月末・四半期末はリバランスで一段と大きい。</span></div>
+        <div class="row"><span class="kk">注意</span><span class="v warn">2013年の不正操作発覚→2015年に算出窓が1分から5分へ拡大。ここでのスパイクは<b>実需フローでありトレンドの示唆とは限らない</b>。飛びついて順張りすると往復ビンタになりやすい。</span></div>
+      </div>
+
+      <div class="card">
+        <div class="ctop"><h3>指標発表時刻のボラ（8:30/10:00 ET・FOMC）</h3><span class="strength s-struct">構造的</span></div>
+        <div class="row"><span class="kk">仕組み</span><span class="v">雇用統計・CPI（夏21:30/冬22:30）やISM等（夏23:00/冬24:00）、FOMC（夏翌3:00/冬翌4:00）の瞬間はボラが跳ね、スプレッドも開く。<b>「時刻そのもの」が構造的な変動要因</b>で、あなたの窓の入口に固まっている。</span></div>
+        <div class="row"><span class="kk">注意</span><span class="v warn">方向は事前に不定。指標をまたぐ既存ポジションや、発表直後の飛びつきは滑りやすい。むしろ発表前後を避ける／別ルールにする、という時間帯フィルタとして使うのが実務的。</span></div>
+      </div>
+
+      <div class="card">
+        <div class="ctop"><h3>オプションカット（NY 10:00 / 東京 15:00）</h3><span class="strength s-mid">限定的</span></div>
+        <div class="row"><span class="kk">仕組み</span><span class="v">FXオプションの期日時刻。大きなストライクやバリアが近いと、その水準に価格が<b>ピン止め</b>されたり防戦の攻防が起きる。NYカット（夏23:00/冬24:00）が最大規模。</span></div>
+        <div class="row"><span class="kk">注意</span><span class="v warn">どのストライクに玉があるかは個人には見えにくく、常に効くわけではない。大口の期日が集中する日限定で、事前把握が難しい。</span></div>
+      </div>
+
+      <div class="card">
+        <div class="ctop"><h3>月末・期末リバランス（特に3月＝年度末）</h3><span class="strength s-struct">構造的</span></div>
+        <div class="row"><span class="kk">仕組み</span><span class="v">月末はWMRフィックス向けの指数リバランス、四半期末・年度末は本邦勢のリパトリ／ヘッジ調整フローが乗り、<b>月末数日はフロー起因の不規則な動き</b>が出やすい。</span></div>
+        <div class="row"><span class="kk">注意</span><span class="v warn">「月末はドル売り／買い」の類は年により逆。方向の固定ルール化は危険で、"荒れやすさ"として認識するのが安全。</span></div>
+      </div>
+
+      <div class="card">
+        <div class="ctop"><h3>薄商い期のボラ低下＆フラッシュ</h3><span class="strength s-mid">限定的</span></div>
+        <div class="row"><span class="kk">仕組み</span><span class="v">お盆・年末年始・GW・欧米の夏枯れ（8月）・クリスマス〜正月は参加者減で低ボラ。一方、<b>板が薄いぶん急変（フラッシュクラッシュ）が起きやすい</b>両面性。年始早朝の薄い時間にドル円が急変した事例もある。</span></div>
+        <div class="row"><span class="kk">注意</span><span class="v warn">「動かないから」と大ロット・広ストップで放置すると、薄商いの急変で想定外の損失に。むしろ枚数を落とす場面。</span></div>
+      </div>
+
+      <div class="card">
+        <div class="ctop"><h3>曜日・週内の傾向</h3><span class="strength s-weak">俗説寄り</span></div>
+        <div class="row"><span class="kk">仕組み</span><span class="v">「月曜は窓・様子見で方向感が乏しい」「金曜NYクローズ前はポジション調整で失速しやすい」等。行動としての説明はつくが、通貨ペア・期間で符号が変わりやすい。</span></div>
+        <div class="row"><span class="kk">注意</span><span class="v warn">サンプルを絞ると簡単に有意に"見えて"しまう（多重比較・過剰最適化）。単体根拠にせず環境認識の補助に。</span></div>
+      </div>
+
+      <div class="card">
+        <div class="ctop"><h3>季節性（Sell in May / Santa rally / 1月効果）</h3><span class="strength s-weak">俗説寄り</span></div>
+        <div class="row"><span class="kk">仕組み</span><span class="v">いずれも<b>もともと株式のアノマリー</b>。FX（特にドル円）への直接の転用根拠は弱く、リスクオン/オフ経由の間接的な連想にとどまる。</span></div>
+        <div class="row"><span class="kk">注意</span><span class="v warn">「株のアノマリーだから為替も」は飛躍。使うなら株経由の相関を自分で確かめてから。</span></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ PRACTICAL ============ -->
+  <section>
+    <div class="eyebrow"><span class="no">06</span> あなたの環境での実践メモ</div>
+    <ul class="clean muted">
+      <li><b class="k">デイトレ窓（21–24時JST）</b>：夏はロンドン×NY重複の芯にドンピシャ。冬は全体が+1hずれるので、指標（21:30→22:30）・NYカット（23:00→24:00）・重複帯開始（21:00→22:00）を機械的に読み替える運用にすると季節切替でズレません。スキャル（JFX）はこの窓のスプレッドが締まる時間を、指標の瞬間だけ避けて使うのが相性◎。</li>
+      <li><b class="k">スイングの朝チェック（OANDA／みんなのFX）</b>：東京勢が動く前（仲値9:55前後）と、日足が切り替わった直後（夏06:00/冬07:00 JST）を基準にすると節目が揃います。日足の区切りは業者で違うので、両者の日足始値がズレていないか一度確認を。</li>
+      <li><b class="k">指標フィルタ</b>：§03の8:30 ET群とFOMCを「触らない/別ルール」の時間帯として手法に重ねると、期待値検証がクリーンになります（指標の飛びつきはサンプルを汚しがち）。</li>
+      <li><b class="k">検証時</b>：仲値・フィックス系はヒゲ／スプレッド感応度が高いので、クロスブローカーではなく<b class="k">執行業者自身のデータ・日足区切り</b>で。夏冬でイベントのJST時刻が動くため、UTCか現地時刻ベースに正規化してから曜日・時刻集計する方が安全です。</li>
+    </ul>
+  </section>
+
+  <!-- ============ SOURCES ============ -->
+  <section>
+    <div class="eyebrow"><span class="no">07</span> 出典（一次情報中心）</div>
+    <ul class="src">
+      <li>BIS《Triennial Central Bank Survey – OTC foreign exchange turnover in April 2025》（英国シェア約38%、米約19%、USDが全取引の89.2%、JPY 16.8%、1日平均9.6兆ドル）<br><a href="https://www.bis.org/statistics/rpfx25_fx.htm">bis.org/statistics/rpfx25_fx.htm</a></li>
+      <li>FSB《Foreign Exchange Benchmarks – Final Report》2014（WMR 4pmロンドン・フィックスが支配的なベンチマークである点、東京9:55仲値の集約・単一レート執行）<br><a href="https://www.fsb.org/uploads/r_140930.pdf">fsb.org/uploads/r_140930.pdf</a></li>
+      <li>神戸大学 経済学部《外国為替市場におけるゴトー日アノマリーを利用したトレード手法の検討》（金曜・ゴトー日の円安傾向と仲値後の反転）<br><a href="https://www.econ.kobe-u.ac.jp/wp/wp-content/uploads/2023/05/R2_shirakisho2.pdf">econ.kobe-u.ac.jp（PDF）</a></li>
+      <li>Michelberger &amp; Witte《FX Market Microstructure and the WM/Reuters 4pm Fix》(2016)（4pm前後のボラ・値幅増）<br><a href="https://ar5iv.arxiv.org/html/1501.07778">ar5iv.arxiv.org/html/1501.07778</a></li>
+      <li>米FOMC 発表時刻（声明14:00 ET・会見14:30 ET）：Federal Reserve 公式カレンダー<br><a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm">federalreserve.gov/monetarypolicy/fomccalendars.htm</a></li>
+      <li>米指標 8:30 ET／10:00 ET：BLS リリーススケジュール<br><a href="https://www.bls.gov/schedule/">bls.gov/schedule</a></li>
+      <li>ECB 政策金利 14:15 CET・会見 14:45 CET（2022/7/21〜）：ECB 公式<br><a href="https://www.ecb.europa.eu/press/pr/date/2022/html/ecb.pr220627~73acedf868.en.html">ecb.europa.eu（プレスリリース）</a></li>
+      <li>サマータイム切替（2026年）：米 3/8→11/1、英・EU 3/29→10/25、日本は UTC+9 固定<br><a href="https://www.timeanddate.com/time/change/usa">timeanddate.com/time/change/usa</a></li>
+      <li>OANDA証券ラボ《「OANDA_Local_Time」でアノマリーを利用するトレード手法》（仲値9:55・ゴトー日の実務解説）<br><a href="https://www.oanda.jp/lab-education/blog_column/oanda_local_time/">oanda.jp/lab-education/…/oanda_local_time</a></li>
+    </ul>
+  </section>
+
+  <div class="foot">JST基準・2026年の夏冬切替に準拠 ／ セッション・指標時刻は目安。売買判断は自己責任で、必ず自分の執行環境で検証を。</div>
+
+</div>
+
+<script>
+(function(){
+  var CFG = {
+    summer: {
+      axisMax: 30,
+      dst: "夏時間：米 EDT（UTC−4）／ロンドン BST（UTC+1）／欧州 CEST。日足の区切り＝翌06:00 JST。",
+      sessions: [
+        {name:"東京 / ASIA",  cls:"tk", label:"東京 08–16", start:8,  end:16},
+        {name:"ロンドン / LONDON", cls:"ld", label:"ロンドン 16–01", start:16, end:25},
+        {name:"NY / NEW YORK", cls:"ny", label:"NY 21–06", start:21, end:30}
+      ],
+      overlap: {start:21, end:25, cap:"重複 21:00–01:00"},
+      fixings: [
+        {t:9.9167, label:"仲値\n9:55", row:0},
+        {t:23,     label:"NYカット\n23:00", row:0},
+        {t:24,     label:"ロンドンFix\n0:00", row:1},
+        {t:30,     label:"NYクローズ\n翌6:00", row:0, close:true}
+      ],
+      indicators: [
+        {t:21.5, label:"指標ラッシュ\n21:30", row:0},
+        {t:23,   label:"ISM等\n23:00", row:1},
+        {t:27,   label:"FOMC\n翌3:00", row:0}
+      ]
+    },
+    winter: {
+      axisMax: 31,
+      dst: "冬時間：米 EST（UTC−5）／ロンドン GMT（UTC±0）／欧州 CET。日足の区切り＝翌07:00 JST。",
+      sessions: [
+        {name:"東京 / ASIA",  cls:"tk", label:"東京 08–16", start:8,  end:16},
+        {name:"ロンドン / LONDON", cls:"ld", label:"ロンドン 17–02", start:17, end:26},
+        {name:"NY / NEW YORK", cls:"ny", label:"NY 22–07", start:22, end:31}
+      ],
+      overlap: {start:22, end:26, cap:"重複 22:00–02:00"},
+      fixings: [
+        {t:9.9167, label:"仲値\n9:55", row:0},
+        {t:24,     label:"NYカット\n0:00", row:0},
+        {t:25,     label:"ロンドンFix\n1:00", row:1},
+        {t:31,     label:"NYクローズ\n翌7:00", row:0, close:true}
+      ],
+      indicators: [
+        {t:22.5, label:"指標ラッシュ\n22:30", row:0},
+        {t:24,   label:"ISM等\n翌0:00", row:1},
+        {t:28,   label:"FOMC\n翌4:00", row:0}
+      ]
+    }
+  };
+
+  function fmt(h){
+    var hh = ((h % 24) + 24) % 24;
+    var day = h >= 24 ? "翌" : "";
+    return day + String(Math.floor(hh)).padStart(2,"0");
+  }
+
+  function marks(list, kind){
+    var html = "";
+    list.forEach(function(f){
+      var max = CFG._max;
+      var edge = (f.t / max) > 0.95;
+      var cls = "tk-mark " + kind + " " + (f.row===1 ? "r1":"r0") + (f.close?" close":"") + (edge?" edge":"");
+      var left = (f.t / max * 100).toFixed(3);
+      html += '<div class="'+cls+'" style="left:'+left+'%"><span class="lab">'+f.label.replace(/\n/g,"<br>")+'</span></div>';
+    });
+    return html;
+  }
+
+  function render(season){
+    var c = CFG[season], max = c.axisMax;
+    CFG._max = max;
+    var pct = function(h){ return (h / max * 100); };
+
+    // lanes
+    var lanes = "";
+    c.sessions.forEach(function(s){
+      var left = pct(s.start), width = pct(s.end) - pct(s.start);
+      lanes +=
+        '<div class="lanewrap">' +
+          '<span class="lane-label">' + s.name + '</span>' +
+          '<div class="lane-bg"></div>' +
+          '<div class="bar ' + s.cls + '" style="left:' + left.toFixed(3) + '%;width:' + width.toFixed(3) + '%">' + s.label + '</div>' +
+        '</div>';
+    });
+    var ovl = pct(c.overlap.start), ovw = pct(c.overlap.end) - pct(c.overlap.start);
+    lanes +=
+      '<div class="overlay" style="left:' + ovl.toFixed(3) + '%;width:' + ovw.toFixed(3) + '%"></div>' +
+      '<div class="overlay-cap" style="left:' + ovl.toFixed(3) + '%">◆ ' + c.overlap.cap + '</div>';
+    document.getElementById("lanes").innerHTML = lanes;
+
+    document.getElementById("fixings").innerHTML = marks(c.fixings, "fx");
+    document.getElementById("indis").innerHTML   = marks(c.indicators, "in");
+
+    var ax = "";
+    for(var h=0; h<=max; h+=3){
+      ax += '<span class="atk" style="left:' + pct(h).toFixed(3) + '%">' + fmt(h) + '</span>';
+    }
+    document.getElementById("axis").innerHTML = ax;
+    document.getElementById("dstNote").textContent = c.dst;
+  }
+
+  var btnS = document.getElementById("btnSum"), btnW = document.getElementById("btnWin");
+  function setSeason(season){
+    render(season);
+    var sum = season==="summer";
+    btnS.classList.toggle("on", sum);
+    btnW.classList.toggle("on", !sum);
+    btnW.classList.toggle("win", !sum);
+  }
+  btnS.addEventListener("click", function(){ setSeason("summer"); });
+  btnW.addEventListener("click", function(){ setSeason("winter"); });
+  setSeason("summer");
+})();
+</script>
+<script>/* market-desk: テーマ切替（自動→ライト→ダーク）。選択はサイト全体で共有 */
+(function(){
+  var K='md-theme', ORDER=['auto','light','dark'], LBL={auto:'自動',light:'ライト',dark:'ダーク'};
+  var ICON={
+    auto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 000 18z" fill="currentColor" stroke="none"/></svg>',
+    light:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>',
+    dark:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>'
+  };
+  function read(){try{var t=localStorage.getItem(K);if(t==='light'||t==='dark')return t;}catch(e){}return 'auto';}
+  var cur=read();
+  function apply(m){
+    cur=m;
+    var h=document.documentElement;
+    if(m==='auto')h.removeAttribute('data-theme'); else h.setAttribute('data-theme',m);
+    try{ if(m==='auto')localStorage.removeItem(K); else localStorage.setItem(K,m); }catch(e){}
+    var ic=document.getElementById('mdThemeIc'), lb=document.getElementById('mdThemeLbl');
+    if(ic)ic.innerHTML=ICON[m];
+    if(lb)lb.textContent=LBL[m];
+    document.dispatchEvent(new CustomEvent('md:theme',{detail:m}));
+  }
+  function init(){
+    apply(cur);
+    var b=document.getElementById('mdTheme');
+    if(b)b.addEventListener('click',function(){apply(ORDER[(ORDER.indexOf(cur)+1)%3]);});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+</body>
+</html>

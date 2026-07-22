@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FX適正ロット計算機 — USD/JPY</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ========== market-desk 共通トークン ========== */
+:root{
+  --paper:#E7EAEE; --surface:#FFFFFF; --surface-2:#F2F4F7;
+  --ink:#0F1A24; --ink-2:#4C5A69; --ink-3:#7A8794;
+  --rule:#C8CFD8; --rule-soft:#DEE3EA;
+  --signal:#B33A30; --watch:#12776A; --ok:#15784C; --warn-c:#8A5300;
+  --tokyo:#C9871F; --london:#3272A8; --newyork:#6A57C8; --gold-c:#B08010;
+  /* 帯・スウォッチ用の固定色（濃色面に暗い文字を載せるためテーマ非依存） */
+  --bar-tk:#E8A24C; --bar-ld:#46B7C9; --bar-ny:#B07BE6;
+  --on-accent:#10151B;
+  --font-disp:var(--font-body);
+  --font-body:"Zen Kaku Gothic New",-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){ html:not([data-theme="light"]){
+    --paper:#0F141A; --surface:#171E26; --surface-2:#1E2731;
+    --ink:#DCE4EC; --ink-2:#93A2B2; --ink-3:#6C7B8B;
+    --rule:#2B3540; --rule-soft:#222B35;
+    --signal:#E0736A; --watch:#3EB5A0; --ok:#46C98C; --warn-c:#E6B652;
+    --tokyo:#E0A94A; --london:#5C9FD6; --newyork:#9385E8; --gold-c:#E8C05A;
+    color-scheme:dark;
+}}
+html[data-theme="dark"]{
+    --paper:#0F141A; --surface:#171E26; --surface-2:#1E2731;
+    --ink:#DCE4EC; --ink-2:#93A2B2; --ink-3:#6C7B8B;
+    --rule:#2B3540; --rule-soft:#222B35;
+    --signal:#E0736A; --watch:#3EB5A0; --ok:#46C98C; --warn-c:#E6B652;
+    --tokyo:#E0A94A; --london:#5C9FD6; --newyork:#9385E8; --gold-c:#E8C05A;
+    color-scheme:dark;
+}
+
+/* ========== サイトバー ========== */
+.site-bar{
+  display:flex;align-items:center;gap:.7rem;height:44px;
+  padding:0 clamp(14px,3vw,24px);
+  background:var(--surface);border-bottom:1px solid var(--rule);
+  font-family:var(--font-mono);font-size:11.5px;position:relative;z-index:60;
+}
+.site-home{
+  display:inline-flex;align-items:center;gap:.45rem;flex:none;
+  color:var(--ink-2);text-decoration:none;letter-spacing:.06em;font-weight:500;
+}
+.site-home:hover{color:var(--ink)}
+.site-home svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;transition:transform .14s}
+.site-home:hover svg{transform:translateX(-2px)}
+.site-home .dot{color:var(--signal)}
+.site-here{
+  color:var(--ink-3);font-family:var(--font-body);font-size:11.5px;
+  padding-left:.7rem;border-left:1px solid var(--rule-soft);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+}
+.site-here a{color:var(--ink-2);text-decoration:none}
+.site-here a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.site-theme{
+  margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:.4rem;
+  border:1px solid var(--rule);background:var(--surface-2);color:var(--ink-2);
+  border-radius:100px;padding:.24rem .62rem;cursor:pointer;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;
+  transition:border-color .12s,color .12s;
+}
+.site-theme:hover{border-color:var(--ink-3);color:var(--ink)}
+.site-theme .ic{display:inline-flex;width:13px;height:13px}
+.site-theme .ic svg{display:block;width:13px;height:13px}
+.site-bar :focus-visible{outline:2px solid var(--signal);outline-offset:3px;border-radius:3px}
+@media(max-width:520px){ .site-here{display:none} }
+@media print{ .site-bar{display:none} }
+
+  /* ページ固有エイリアス（共通トークンから導出） */
+  :root{
+    --panel:var(--surface); --bg:var(--paper);
+    --line:var(--rule); --line-2:var(--rule-soft);
+    --accent:var(--watch); --accent-soft:color-mix(in srgb,var(--watch) 12%,transparent);
+    --profit:var(--ok);   --profit-bg:color-mix(in srgb,var(--ok) 12%,transparent);
+    --loss:var(--signal); --loss-bg:color-mix(in srgb,var(--signal) 12%,transparent);
+    --warn:var(--warn-c); --warn-bg:color-mix(in srgb,var(--warn-c) 13%,transparent);
+    --warn-line:color-mix(in srgb,var(--warn-c) 45%,transparent);
+    --input-bg:var(--surface-2); --chip-bg:var(--surface-2);
+    --radius:14px;
+  }
+  *{box-sizing:border-box; margin:0; padding:0;}
+  body{
+    font-family:var(--font-body);
+    background:var(--bg); color:var(--ink);
+    -webkit-font-smoothing:antialiased; line-height:1.5;
+    padding:22px 16px 48px;
+  }
+  .wrap{max-width:760px; margin:0 auto;}
+  .mono{font-family:var(--font-mono); font-variant-numeric:tabular-nums;}
+
+  header{margin-bottom:20px;}
+  .eyebrow{font-size:11px; letter-spacing:.16em; text-transform:uppercase;
+    color:var(--accent); font-weight:600; margin-bottom:6px;}
+  h1{font-family:var(--font-disp); font-size:24px; font-weight:700; letter-spacing:.01em;}
+  .sub{color:var(--ink-2); font-size:13px; margin-top:4px;}
+
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:16px;}
+  @media(max-width:640px){ .grid{grid-template-columns:1fr;} }
+
+  .panel{background:var(--panel); border:1px solid var(--line);
+    border-radius:var(--radius); padding:18px;}
+  .panel h2{font-size:12px; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--ink-3); font-weight:600; margin-bottom:14px;
+    padding-bottom:10px; border-bottom:1px solid var(--line-2);}
+
+  .field{margin-bottom:13px;}
+  .field:last-child{margin-bottom:0;}
+
+  .brokers{display:flex; gap:6px; margin-bottom:8px;}
+  .brokers button{flex:1; padding:9px 4px; font-size:13px; font-weight:600;
+    font-family:inherit; color:var(--ink-2); background:var(--chip-bg);
+    border:1px solid var(--line); border-radius:9px; cursor:pointer;
+    transition:all .12s;}
+  .brokers button:hover{border-color:var(--accent); color:var(--accent);}
+  .brokers button.active{background:var(--accent); color:#fff; border-color:var(--accent);}
+  .brokerNote{font-size:11.5px; color:var(--ink-3); margin-bottom:14px; min-height:1.4em; line-height:1.4;}
+  .bset{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line-2);
+    border:1px solid var(--line); border-radius:10px; overflow:hidden; margin-bottom:8px;}
+  .bset > div{background:var(--input-bg); padding:8px 11px; display:flex; justify-content:space-between; align-items:baseline; gap:8px;}
+  .bset .bk{font-size:11px; color:var(--ink-3); font-weight:500;}
+  .bset .bv{font-size:13px; color:var(--ink); font-weight:600;
+    font-family:'Roboto Mono',monospace; text-align:right;}
+  .field label{display:block; font-size:12.5px; color:var(--ink-2);
+    font-weight:500; margin-bottom:5px;}
+  .inputrow{display:flex; align-items:stretch; border:1px solid var(--line);
+    border-radius:9px; overflow:hidden; background:var(--input-bg); transition:border-color .15s;}
+  .inputrow:focus-within{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft);}
+  .inputrow input{flex:1; min-width:0; border:0; background:transparent;
+    padding:9px 11px; font-size:15px; color:var(--ink); text-align:right;
+    font-family:'Roboto Mono',monospace; font-variant-numeric:tabular-nums;}
+  .inputrow input:focus{outline:none;}
+  .unit{display:flex; align-items:center; padding:0 11px; font-size:12px;
+    color:var(--ink-3); background:var(--chip-bg); border-left:1px solid var(--line); white-space:nowrap;}
+  .hint{font-size:11px; color:var(--accent); margin-top:4px; font-weight:500;}
+
+  .dirtoggle{display:flex; gap:6px;}
+  .dirtoggle button{flex:1; padding:10px 4px; font-size:13.5px; font-weight:600;
+    font-family:inherit; color:var(--ink-2); background:var(--chip-bg);
+    border:1px solid var(--line); border-radius:9px; cursor:pointer; transition:all .12s;}
+  .dirtoggle button[data-d="buy"].active{background:var(--profit); color:#fff; border-color:var(--profit);}
+  .dirtoggle button[data-d="sell"].active{background:var(--loss); color:#fff; border-color:var(--loss);}
+  .dirtoggle button:not(.active):hover{border-color:var(--ink-3); color:var(--ink);}
+
+  /* result panel */
+  .hero{background:var(--panel); border:1px solid var(--line);
+    border-radius:var(--radius); padding:18px; margin-bottom:16px;
+    display:flex; align-items:flex-end; justify-content:space-between; gap:12px; flex-wrap:wrap;}
+  .hero .cap{font-size:12px; letter-spacing:.08em; text-transform:uppercase;
+    color:var(--ink-3); font-weight:600;}
+  .hero .big{font-size:40px; font-weight:600; letter-spacing:-.02em; line-height:1;}
+  .hero .big small{font-size:17px; color:var(--ink-2); font-weight:500; margin-left:4px;}
+  .hero .side{text-align:right; font-size:13px; color:var(--ink-2);}
+  .hero .side b{color:var(--ink); font-weight:600;}
+
+  .out{display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--line-2);
+    border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;}
+  @media(max-width:480px){ .out{grid-template-columns:1fr;} }
+  .cell{background:var(--panel); padding:14px 15px;}
+  .cell .k{font-size:11.5px; color:var(--ink-3); font-weight:500; margin-bottom:4px;}
+  .cell .v{font-size:19px; font-weight:600; letter-spacing:-.01em;}
+  .v.profit{color:var(--profit);} .v.loss{color:var(--loss);}
+
+  .warn{margin-top:14px; background:var(--warn-bg); border:1px solid var(--warn-line);
+    color:var(--warn); border-radius:11px; padding:12px 14px; font-size:13px; display:none;}
+  .warn.show{display:block;}
+  .warn b{font-weight:700;}
+
+  .notes{margin-top:20px; font-size:12px; color:var(--ink-2); line-height:1.65;}
+  .notes p{margin-bottom:5px;}
+  .notes .tag{color:var(--accent); font-weight:600;}
+  footer{margin-top:18px; font-size:11px; color:var(--ink-3); line-height:1.6;
+    border-top:1px solid var(--line); padding-top:12px;}
+  footer a{color:var(--ink-2);}
+</style>
+<script>/* 描画前にテーマを適用（ちらつき防止） */
+(function(){try{var t=localStorage.getItem('md-theme');
+if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
+</head>
+<body>
+<nav class="site-bar" aria-label="サイト"><a class="site-home" href="../"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H6M11 6l-6 6 6 6"/></svg>market<span class="dot">·</span>desk</a><span class="site-here">適正ロット計算機</span><button class="site-theme" id="mdTheme" type="button" title="テーマ切替：自動 / ライト / ダーク" aria-label="テーマ切替"><span class="ic" id="mdThemeIc"></span><span id="mdThemeLbl">自動</span></button></nav>
+<div class="wrap">
+  <header>
+      <div class="eyebrow">FX ロット計算ツール</div>
+      <h1>FX適正ロット計算機 <span class="mono" style="font-size:16px;color:var(--ink-3);">USD/JPY</span></h1>
+      <p class="sub">許容損失（残高 × リスク割合）と損切り幅から、適正なロット（必要数量）を逆算します。 <a href="./docs/" style="color:var(--accent);text-underline-offset:3px">計算ロジックと前提 →</a></p>
+  </header>
+
+  <div class="grid">
+    <!-- INPUTS -->
+    <section class="panel">
+      <h2>入力</h2>
+      <div class="brokers" id="brokers">
+        <button type="button" data-b="jfx">JFX</button>
+        <button type="button" data-b="min">みんなのFX</button>
+        <button type="button" data-b="oanda">OANDA証券</button>
+      </div>
+      <div class="bset">
+        <div><span class="bk">pip価値</span><b class="bv" id="setPip">–</b></div>
+        <div><span class="bk">1ロット</span><b class="bv" id="setLot">–</b></div>
+        <div><span class="bk">ロスカット水準</span><b class="bv" id="setLc">–</b></div>
+        <div><span class="bk">レバレッジ</span><b class="bv">25倍</b></div>
+      </div>
+      <p class="brokerNote" id="brokerNote"></p>
+      <div class="field">
+        <label>売買方向</label>
+        <div class="dirtoggle" id="dir">
+          <button type="button" data-d="buy" class="active">買い（ロング）</button>
+          <button type="button" data-d="sell">売り（ショート）</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="bal">口座残高</label>
+        <div class="inputrow"><input id="bal" type="number" inputmode="decimal" value="300000"><span class="unit">円</span></div>
+      </div>
+      <div class="field">
+        <label for="risk">リスク割合（1トレードの許容損失）</label>
+        <div class="inputrow"><input id="risk" type="number" inputmode="decimal" step="0.1" value="1"><span class="unit">%</span></div>
+      </div>
+      <div class="field">
+        <label for="sl">損切り幅</label>
+        <div class="inputrow"><input id="sl" type="number" inputmode="decimal" step="0.1" value="10"><span class="unit">pips</span></div>
+        <div class="hint" id="slHint"></div>
+      </div>
+      <div class="field">
+        <label for="tp">利確幅（RR比の算出のみ・数量には非影響）</label>
+        <div class="inputrow"><input id="tp" type="number" inputmode="decimal" step="0.1" value="10"><span class="unit">pips</span></div>
+        <div class="hint" id="tpHint"></div>
+      </div>
+      <div class="field">
+        <label for="rate">現在レート／エントリー価格（USD/JPY）</label>
+        <div class="inputrow"><input id="rate" type="number" inputmode="decimal" step="0.01" value="157.00"><span class="unit">円</span></div>
+      </div>
+    </section>
+
+    <!-- RESULTS -->
+    <div>
+      <div class="hero">
+        <div>
+          <div class="cap">必要ポジションサイズ</div>
+          <div class="big mono"><span id="man">–</span><small>万通貨</small></div>
+        </div>
+        <div class="side">
+          <div><span class="mono" id="units">–</span> 通貨</div>
+          <div><b class="mono" id="lots">–</b> Lot</div>
+        </div>
+      </div>
+
+      <div class="out">
+        <div class="cell"><div class="k">許容損失額</div><div class="v mono" id="riskAmt">–</div></div>
+        <div class="cell"><div class="k">1pip あたり損益</div><div class="v mono" id="pipVal">–</div></div>
+        <div class="cell"><div class="k">損切り時の損益</div><div class="v mono loss" id="slPnl">–</div></div>
+        <div class="cell"><div class="k">利確時の利益</div><div class="v mono profit" id="tpPnl">–</div></div>
+        <div class="cell"><div class="k">リスクリワード比</div><div class="v mono" id="rr">–</div></div>
+        <div class="cell"><div class="k">必要証拠金（概算）</div><div class="v mono" id="margin">–</div></div>
+        <div class="cell"><div class="k">ロスカットまでの距離</div><div class="v mono" id="lcDist">–</div><div class="k" id="lcRate" style="margin-top:4px;margin-bottom:0;"></div></div>
+        <div class="cell"><div class="k">建玉時の証拠金維持率</div><div class="v mono" id="mmr">–</div></div>
+      </div>
+
+      <div class="warn" id="warn"></div>
+    </div>
+  </div>
+
+  <div class="notes">
+    <p><span class="tag">仕組み:</span> 必要数量 = (残高 × リスク%) ÷ (損切りpips × pip価値)。USD/JPY の pip価値は証券会社で異なり、JFXは1pip＝0.001円、みんなのFX・OANDAは1pip＝0.01円です。同じ「10pips」でも実距離が10倍変わるため、証券会社ボタンで自動切替し、損切り・利確幅は銭・円でも併記しています。</p>
+    <p><span class="tag">注意:</span> ポジションサイズは<b>損切り幅だけ</b>で決まります。利確幅はRR比の表示にのみ使用します。損切りが狭いほど必要数量が増え、必要証拠金が制約になります。</p>
+    <p><span class="tag">ロスカット:</span> ロスカットまでの距離 = (残高 − ロスカット水準 × 必要証拠金) ÷ 1pip損益。これが損切り幅より短いと、損切りより先に強制決済され得ます。リスク割合を守って適正なロットにした単一ポジションなら通常この距離は数百pips以上あり、損切りが先に働きます。距離が短くなるのは証拠金の余裕が薄いときです。</p>
+    <p><span class="tag">除外:</span> スプレッド・手数料・スワップは含みません。必要証拠金・ロスカットレートは建玉時レート基準の概算で、急変時は実際の執行値とずれます。</p>
+  </div>
+
+  <footer>
+    対応: USD/JPY 専用。個人口座のレバレッジ上限25倍（証拠金率4%）は金融庁規制／金融先物取引業協会に基づく。pip定義 — JFX: 1pip=0.001円（faq.jfx.co.jp）／みんなのFX: 1pip=0.01円（min-fx.jp）／OANDA証券: 1pip=0.01円（oanda.jp 用語集）。ロスカット水準はJFX・みんなのFX・OANDA東京TY3とも維持率100%。必要証拠金・ロスカットレートは建玉時レート基準の概算です。正確な値は各社の証拠金シミュレーションで確認してください。
+  </footer>
+</div>
+
+<script>
+(function(){
+  let PIP = 0.01;      // pip価値（円）— 証券会社で切替
+  let LOTSIZE = 10000; // 1ロットの通貨数 — 証券会社で切替
+  let LC = 1;          // ロスカット水準（維持率, 小数）— 証券会社で切替
+  const LEV = 25;      // 個人口座USD/JPYは25倍固定
+  let DIR = 'buy';     // 売買方向: 'buy'（ロング）/ 'sell'（ショート）
+  const ids = ['bal','risk','sl','tp','rate'];
+  const el = {};
+  ids.forEach(i => el[i] = document.getElementById(i));
+  const out = id => document.getElementById(id);
+
+  const yen = n => (n<0?'-':'') + '¥' + Math.abs(Math.round(n)).toLocaleString('ja-JP');
+  const num = (n,d=0) => Number(n).toLocaleString('ja-JP',{minimumFractionDigits:d,maximumFractionDigits:d});
+
+  function calc(){
+    const bal  = parseFloat(el.bal.value)  || 0;
+    const risk = (parseFloat(el.risk.value)|| 0) / 100;
+    const sl   = parseFloat(el.sl.value)   || 0;
+    const tp   = parseFloat(el.tp.value)   || 0;
+    const rate = parseFloat(el.rate.value) || 0;
+    const lev  = LEV;
+    const lc   = LC;
+    const lot  = LOTSIZE;
+
+    const riskAmt = bal * risk;
+    const units   = (sl>0) ? riskAmt / (sl * PIP) : 0;
+    const pipVal  = units * PIP;
+    const slPnl   = -(units * sl * PIP);
+    const tpPnl   = units * tp * PIP;
+    const rr      = (sl>0) ? tp / sl : 0;
+    const margin  = (lev>0) ? units * rate / lev : 0;   // 必要証拠金（建玉時・固定近似）
+    const marginPct = (bal>0) ? margin / bal : 0;
+    const mmr     = (margin>0) ? bal / margin : 0;        // 建玉時の証拠金維持率
+    // ロスカットまでの距離: 維持率がlcに達するまでに口座が耐える含み損 = bal - lc*margin
+    const buildable = margin>0 && margin <= bal;
+    const absorb  = bal - lc * margin;                    // 耐えられる含み損（円）
+    const lcDist  = (buildable && pipVal>0) ? absorb / pipVal : null;  // pips
+    const dm      = (DIR==='buy') ? 1 : -1;               // 方向係数（買い=+1 / 売り=-1）
+    const lcRate  = (lcDist!=null) ? rate - dm * lcDist * PIP : null;  // 方向に応じたロスカットレート
+
+    out('man').textContent   = units ? num(units/10000, 2) : '–';
+    out('units').textContent = units ? num(Math.round(units)) : '–';
+    out('lots').textContent  = (units && lot>0) ? num(units/lot, 2) : '–';
+    out('riskAmt').textContent = yen(riskAmt);
+    out('pipVal').textContent  = yen(pipVal);
+    out('slPnl').textContent   = yen(slPnl);
+    out('tpPnl').textContent   = '+' + yen(tpPnl);
+    out('rr').textContent      = rr ? '1 : ' + num(rr,2) : '–';
+    out('margin').textContent  = yen(margin);
+    out('mmr').textContent     = mmr ? num(mmr*100,0) + '%' : '–';
+
+    // 損切り・利確幅を銭・円の実距離＋選択方向の価格レベルで併記
+    const slSen = sl * PIP / 0.01, tpSen = tp * PIP / 0.01;
+    const slDist = sl * PIP, tpDist = tp * PIP;
+    const slPrice = rate - dm * slDist;   // 買い: entry−距離 / 売り: entry＋距離
+    const tpPrice = rate + dm * tpDist;   // 買い: entry＋距離 / 売り: entry−距離
+    const hint = (sen, dist, word, price) => {
+      let s = num(sen,1) + '銭（' + num(dist,3) + '円）';
+      if(rate>0) s += ' ｜ ' + word + ' ' + num(price,3) + '円';
+      return s;
+    };
+    out('slHint').textContent = sl ? hint(slSen, slDist, '損切り', slPrice) : '';
+    out('tpHint').textContent = tp ? hint(tpSen, tpDist, '利確', tpPrice) : '';
+
+    const dirWord = (DIR==='buy') ? '買い' : '売り';
+    if(lcDist!=null){
+      out('lcDist').textContent = num(lcDist,1) + ' pips';
+      out('lcRate').textContent = 'レート ' + num(lcRate,3) + ' でロスカット（' + dirWord + '）';
+      out('lcDist').className = 'v mono' + (lcDist < sl ? ' loss' : '');
+    } else {
+      out('lcDist').textContent = '–';
+      out('lcRate').textContent = buildable ? '' : '証拠金不足で建てられません';
+      out('lcDist').className = 'v mono';
+    }
+
+    const w = out('warn');
+    if(marginPct > 1 && units>0){
+      w.classList.add('show');
+      w.innerHTML = '⚠ 必要証拠金が残高を超えています（残高の <b>'+num(marginPct*100,1)+'%</b>）。'
+        + 'この損切り幅では必要数量が大きすぎてポジションを建てられません。損切り幅を広げるか、リスク割合を下げてください。';
+    } else if(lcDist!=null && lcDist < sl && units>0){
+      w.classList.add('show');
+      w.innerHTML = '⚠ ロスカットまで <b>'+num(lcDist,1)+'pips</b> と、損切り幅（'+num(sl,1)+'pips）より手前です。'
+        + '損切りが働く前に強制決済される可能性があります。証拠金を厚くするか数量を減らしてください。';
+    } else if(marginPct > 0.5 && units>0){
+      w.classList.add('show');
+      w.innerHTML = '必要証拠金が残高の <b>'+num(marginPct*100,1)+'%</b> を使用します。証拠金維持率に余裕があるか確認してください。';
+    } else {
+      w.classList.remove('show');
+    }
+  }
+
+  const BROKERS = {
+    jfx:   {lot:1000,  lc:100, pip:0.001, sl:100, tp:100, label:'JFX（マトリックストレーダー）：建値が細かく1pip＝0.1銭刻み。スキャルピング向け。'},
+    min:   {lot:10000, lc:100, pip:0.01,  sl:10,  tp:10,  label:'みんなのFX：1Lot＝10,000通貨だが最小0.1Lot＝1,000通貨から取引可能。'},
+    oanda: {lot:1000,  lc:100, pip:0.01,  sl:10,  tp:10,  label:'OANDA証券（東京サーバーTY3）：発注は通貨数量ベースのためLotは目安。NYサーバー(fxTrade)はロスカット判定が別指標。'}
+  };
+  const brokerBtns = document.querySelectorAll('#brokers button');
+  const brokerNote = document.getElementById('brokerNote');
+  function setBroker(key){
+    const b = BROKERS[key]; if(!b) return;
+    PIP = b.pip; LOTSIZE = b.lot; LC = b.lc/100;
+    el.sl.value = b.sl; el.tp.value = b.tp;
+    out('setPip').textContent = num(b.pip,3) + '円（' + num(b.pip/0.01,1) + '銭）';
+    out('setLot').textContent = num(b.lot) + '通貨';
+    out('setLc').textContent  = '維持率' + b.lc + '%';
+    brokerBtns.forEach(x => x.classList.toggle('active', x.dataset.b===key));
+    brokerNote.textContent = b.label;
+    calc();
+  }
+  brokerBtns.forEach(x => x.addEventListener('click', () => setBroker(x.dataset.b)));
+
+  const dirBtns = document.querySelectorAll('#dir button');
+  dirBtns.forEach(x => x.addEventListener('click', () => {
+    DIR = x.dataset.d;
+    dirBtns.forEach(y => y.classList.toggle('active', y.dataset.d===DIR));
+    calc();
+  }));
+
+  ids.forEach(i => el[i].addEventListener('input', calc));
+  setBroker('min');
+})();
+</script>
+<script>/* market-desk: テーマ切替（自動→ライト→ダーク）。選択はサイト全体で共有 */
+(function(){
+  var K='md-theme', ORDER=['auto','light','dark'], LBL={auto:'自動',light:'ライト',dark:'ダーク'};
+  var ICON={
+    auto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 000 18z" fill="currentColor" stroke="none"/></svg>',
+    light:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>',
+    dark:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>'
+  };
+  function read(){try{var t=localStorage.getItem(K);if(t==='light'||t==='dark')return t;}catch(e){}return 'auto';}
+  var cur=read();
+  function apply(m){
+    cur=m;
+    var h=document.documentElement;
+    if(m==='auto')h.removeAttribute('data-theme'); else h.setAttribute('data-theme',m);
+    try{ if(m==='auto')localStorage.removeItem(K); else localStorage.setItem(K,m); }catch(e){}
+    var ic=document.getElementById('mdThemeIc'), lb=document.getElementById('mdThemeLbl');
+    if(ic)ic.innerHTML=ICON[m];
+    if(lb)lb.textContent=LBL[m];
+    document.dispatchEvent(new CustomEvent('md:theme',{detail:m}));
+  }
+  function init(){
+    apply(cur);
+    var b=document.getElementById('mdTheme');
+    if(b)b.addEventListener('click',function(){apply(ORDER[(ORDER.indexOf(cur)+1)%3]);});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+</body>
+</html>
