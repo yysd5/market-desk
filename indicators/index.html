@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>経済指標マップ — USD/JPY とメジャー通貨ペア</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ========== market-desk 共通トークン ========== */
+:root{
+  --paper:#E7EAEE; --surface:#FFFFFF; --surface-2:#F2F4F7;
+  --ink:#0F1A24; --ink-2:#4C5A69; --ink-3:#7A8794;
+  --rule:#C8CFD8; --rule-soft:#DEE3EA;
+  --signal:#B33A30; --watch:#12776A; --ok:#15784C; --warn-c:#8A5300;
+  --tokyo:#C9871F; --london:#3272A8; --newyork:#6A57C8; --gold-c:#B08010;
+  /* 帯・スウォッチ用の固定色（濃色面に暗い文字を載せるためテーマ非依存） */
+  --bar-tk:#E8A24C; --bar-ld:#46B7C9; --bar-ny:#B07BE6;
+  --on-accent:#10151B;
+  --font-disp:var(--font-body);
+  --font-body:"Zen Kaku Gothic New",-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){ html:not([data-theme="light"]){
+    --paper:#0F141A; --surface:#171E26; --surface-2:#1E2731;
+    --ink:#DCE4EC; --ink-2:#93A2B2; --ink-3:#6C7B8B;
+    --rule:#2B3540; --rule-soft:#222B35;
+    --signal:#E0736A; --watch:#3EB5A0; --ok:#46C98C; --warn-c:#E6B652;
+    --tokyo:#E0A94A; --london:#5C9FD6; --newyork:#9385E8; --gold-c:#E8C05A;
+    color-scheme:dark;
+}}
+html[data-theme="dark"]{
+    --paper:#0F141A; --surface:#171E26; --surface-2:#1E2731;
+    --ink:#DCE4EC; --ink-2:#93A2B2; --ink-3:#6C7B8B;
+    --rule:#2B3540; --rule-soft:#222B35;
+    --signal:#E0736A; --watch:#3EB5A0; --ok:#46C98C; --warn-c:#E6B652;
+    --tokyo:#E0A94A; --london:#5C9FD6; --newyork:#9385E8; --gold-c:#E8C05A;
+    color-scheme:dark;
+}
+
+/* ========== サイトバー ========== */
+.site-bar{
+  display:flex;align-items:center;gap:.7rem;height:44px;
+  padding:0 clamp(14px,3vw,24px);
+  background:var(--surface);border-bottom:1px solid var(--rule);
+  font-family:var(--font-mono);font-size:11.5px;position:relative;z-index:60;
+}
+.site-home{
+  display:inline-flex;align-items:center;gap:.45rem;flex:none;
+  color:var(--ink-2);text-decoration:none;letter-spacing:.06em;font-weight:500;
+}
+.site-home:hover{color:var(--ink)}
+.site-home svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;transition:transform .14s}
+.site-home:hover svg{transform:translateX(-2px)}
+.site-home .dot{color:var(--signal)}
+.site-here{
+  color:var(--ink-3);font-family:var(--font-body);font-size:11.5px;
+  padding-left:.7rem;border-left:1px solid var(--rule-soft);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+}
+.site-here a{color:var(--ink-2);text-decoration:none}
+.site-here a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.site-theme{
+  margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:.4rem;
+  border:1px solid var(--rule);background:var(--surface-2);color:var(--ink-2);
+  border-radius:100px;padding:.24rem .62rem;cursor:pointer;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;
+  transition:border-color .12s,color .12s;
+}
+.site-theme:hover{border-color:var(--ink-3);color:var(--ink)}
+.site-theme .ic{display:inline-flex;width:13px;height:13px}
+.site-theme .ic svg{display:block;width:13px;height:13px}
+.site-bar :focus-visible{outline:2px solid var(--signal);outline-offset:3px;border-radius:3px}
+@media(max-width:520px){ .site-here{display:none} }
+@media print{ .site-bar{display:none} }
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"Zen Kaku Gothic New",-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  font-size:15px; line-height:1.75;
+  -webkit-text-size-adjust:100%;
+  padding-bottom:4rem;
+}
+.mono{font-family:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;font-variant-numeric:tabular-nums}
+.wrap{max-width:1160px;margin:0 auto;padding:0 clamp(14px,3vw,28px)}
+a{color:inherit}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--signal);outline-offset:2px;border-radius:3px}
+
+/* ============================================================
+   マストヘッド
+   ============================================================ */
+.masthead{border-bottom:1px solid var(--rule);background:var(--surface)}
+.masthead .wrap{
+  position:relative;
+  display:flex;gap:1.5rem;align-items:flex-end;justify-content:space-between;
+  flex-wrap:wrap;padding-top:1.6rem;padding-bottom:1.2rem;
+}
+.brand{padding-right:0}
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-3);margin:0 0 .5rem;
+}
+h1{
+  font-family:var(--font-body);font-weight:700;
+  font-size:clamp(26px,5.2vw,42px);line-height:1.15;margin:0;letter-spacing:.01em;
+}
+h1 em{font-style:normal;color:var(--signal)}
+.lede{margin:.7rem 0 0;max-width:52ch;color:var(--ink-2);font-size:13.5px;line-height:1.8}
+.status{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;line-height:1.9;
+  color:var(--ink-2);text-align:right;flex-shrink:0;
+}
+.status b{color:var(--ink);font-weight:600}
+.status .dst-line{display:block;white-space:nowrap}
+.status .dot{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;vertical-align:1px}
+.dot.on{background:var(--tokyo)}
+.dot.off{background:var(--ink-3)}
+
+/* ============================================================
+   シグネチャ：JST 24時間タイムライン
+   ============================================================ */
+.timeline-sec{background:var(--surface);border-bottom:1px solid var(--rule)}
+.timeline-sec .wrap{padding-top:1.4rem;padding-bottom:1.5rem}
+.tl-head{display:flex;justify-content:space-between;align-items:baseline;gap:1rem;flex-wrap:wrap;margin-bottom:.9rem}
+.tl-title{font-family:"IBM Plex Mono",monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-3)}
+.tl-legend{display:flex;gap:.9rem;flex-wrap:wrap;font-size:11px;color:var(--ink-2);font-family:"IBM Plex Mono",monospace}
+.tl-legend span{display:inline-flex;align-items:center;gap:.35rem}
+.tl-legend i{width:14px;height:3px;border-radius:2px;display:inline-block}
+
+.timeline{position:relative;width:100%;height:132px;user-select:none;touch-action:pan-y}
+@media(max-width:640px){.timeline{height:118px}}
+.timeline svg{display:block;width:100%;height:100%;overflow:visible}
+.tl-band{opacity:.13}
+.tl-band-label{font-family:"IBM Plex Mono",monospace;font-size:9px;letter-spacing:.1em;fill:var(--ink-3)}
+.tl-axis{stroke:var(--rule);stroke-width:1}
+.tl-hour{font-family:"IBM Plex Mono",monospace;font-size:9.5px;fill:var(--ink-3)}
+.tl-tick{cursor:pointer}
+.tl-tick rect{transition:transform .12s ease}
+.tl-tick:hover rect,.tl-tick:focus rect{transform:scaleY(1.25)}
+.tl-watch{fill:var(--watch);opacity:.11}
+.tl-watch-edge{stroke:var(--watch);stroke-width:1;stroke-dasharray:3 3;opacity:.65}
+.tl-watch-label{font-family:"IBM Plex Mono",monospace;font-size:9.5px;fill:var(--watch);letter-spacing:.08em}
+.tl-callout{font-family:"IBM Plex Mono",monospace;font-size:10px;fill:var(--ink-2)}
+
+/* ============================================================
+   コントロール
+   ============================================================ */
+.controls{
+  position:sticky;top:0;z-index:20;background:var(--surface);
+  border-bottom:1px solid var(--rule);
+  backdrop-filter:saturate(1.4) blur(6px);
+}
+.controls .wrap{padding-top:.75rem;padding-bottom:.75rem;display:flex;gap:.6rem;flex-wrap:wrap;align-items:center}
+.search{
+  flex:1 1 220px;min-width:0;display:flex;align-items:center;gap:.5rem;
+  background:var(--surface-2);border:1px solid var(--rule-soft);border-radius:var(--r);
+  padding:.42rem .65rem;
+}
+.search input{border:0;background:transparent;width:100%;outline:none;font-size:13.5px}
+.search svg{flex-shrink:0;stroke:var(--ink-3)}
+.chips{display:flex;gap:.3rem;flex-wrap:wrap}
+.chip{
+  border:1px solid var(--rule);background:transparent;color:var(--ink-2);
+  border-radius:100px;padding:.28rem .6rem;font-size:11.5px;cursor:pointer;
+  font-family:"IBM Plex Mono",monospace;letter-spacing:.04em;transition:all .12s;
+  white-space:nowrap;
+}
+.chip:hover{border-color:var(--ink-3)}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip.sig[aria-pressed="true"]{background:var(--signal);border-color:var(--signal);color:#fff}
+.chip.wt[aria-pressed="true"]{background:var(--watch);border-color:var(--watch);color:#fff}
+.sel{
+  border:1px solid var(--rule);background:var(--surface-2);border-radius:var(--r);
+  padding:.32rem .5rem;font-size:11.5px;font-family:"IBM Plex Mono",monospace;cursor:pointer;
+}
+.ctl-spacer{flex:1 1 0;min-width:0}
+.count{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--ink-3);white-space:nowrap}
+
+/* ============================================================
+   リスト
+   ============================================================ */
+main{margin-top:1.4rem}
+.grouphead{
+  font-family:"IBM Plex Mono",monospace;font-size:10.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-3);margin:1.6rem 0 .5rem;
+  display:flex;align-items:center;gap:.7rem;
+}
+.grouphead::after{content:"";flex:1;height:1px;background:var(--rule-soft)}
+.grouphead:first-child{margin-top:0}
+
+.row{
+  background:var(--surface);border:1px solid var(--rule-soft);border-radius:var(--r);
+  margin-bottom:5px;overflow:hidden;
+}
+.row.hit{border-color:var(--signal);box-shadow:0 0 0 2px color-mix(in srgb,var(--signal) 22%,transparent)}
+.row-btn{
+  width:100%;background:transparent;border:0;text-align:left;cursor:pointer;
+  display:grid;gap:.35rem .8rem;padding:.7rem .8rem;align-items:center;
+  grid-template-columns:22px minmax(0,1fr) auto;
+}
+.row-btn:hover{background:var(--surface-2)}
+
+/* シグナル強度バー */
+.sig-bars{display:flex;align-items:flex-end;gap:1.5px;height:15px}
+.sig-bars i{width:3.5px;background:var(--rule);border-radius:1px;display:block}
+.sig-bars i:nth-child(1){height:5px}
+.sig-bars i:nth-child(2){height:8px}
+.sig-bars i:nth-child(3){height:11.5px}
+.sig-bars i:nth-child(4){height:15px}
+.sig-bars i.on{background:var(--ink-2)}
+.sig-bars.lv4 i.on{background:var(--signal)}
+
+.r-name{font-weight:500;font-size:14.5px;line-height:1.45;letter-spacing:.005em}
+.r-en{display:block;font-family:"IBM Plex Mono",monospace;font-size:10.5px;color:var(--ink-3);font-weight:400;letter-spacing:.01em;margin-top:1px}
+.r-meta{
+  grid-column:2/4;display:flex;gap:.5rem .9rem;flex-wrap:wrap;align-items:center;
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--ink-2);
+}
+.cc{
+  font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.08em;font-weight:600;
+  padding:.05rem .35rem;border-radius:3px;border:1px solid;
+}
+.cc{--c:var(--ink-2);color:var(--c);border-color:color-mix(in srgb,var(--c) 40%,transparent);
+  background:color-mix(in srgb,var(--c) 9%,transparent)}
+.cc.US{--c:var(--london)} .cc.JP{--c:var(--signal)} .cc.EU{--c:var(--newyork)}
+.cc.GB{--c:#8E44AD} .cc.AU{--c:var(--ok)} .cc.CN{--c:var(--tokyo)}
+.jst{font-weight:600;color:var(--ink)}
+.jst.inwatch{color:var(--watch)}
+.jst .nx{font-size:9.5px;color:var(--ink-3);font-weight:400;margin-right:2px}
+.r-pairs{color:var(--ink-3)}
+.chev{width:16px;height:16px;stroke:var(--ink-3);transition:transform .18s;flex-shrink:0;justify-self:end}
+.row[open] .chev,.row.open .chev{transform:rotate(90deg)}
+
+.panel{
+  display:none;padding:0 .8rem 1rem;border-top:1px solid var(--rule-soft);
+  margin-top:-1px;
+}
+.row.open .panel{display:block}
+.blk{padding-top:.85rem}
+.blk h3{
+  font-family:"IBM Plex Mono",monospace;font-size:10px;letter-spacing:.15em;text-transform:uppercase;
+  color:var(--ink-3);margin:0 0 .3rem;font-weight:500;
+}
+.blk p{margin:0;font-size:13.5px;line-height:1.85;color:var(--ink-2);max-width:78ch}
+.blk p b{color:var(--ink);font-weight:500}
+.blk.why{border-left:2px solid var(--signal);padding-left:.8rem;margin-left:-.1rem}
+.srcline{
+  margin-top:.9rem;padding-top:.7rem;border-top:1px dashed var(--rule-soft);
+  font-family:"IBM Plex Mono",monospace;font-size:11px;display:flex;gap:.5rem;
+  flex-wrap:wrap;align-items:baseline;color:var(--ink-3);
+}
+.srcline a{color:var(--ink-2);text-decoration-color:var(--rule);text-underline-offset:3px}
+.srcline a:hover{color:var(--signal);text-decoration-color:var(--signal)}
+.freq{color:var(--ink-3)}
+
+.empty{padding:3rem 1rem;text-align:center;color:var(--ink-3);font-size:13.5px}
+
+/* ============================================================
+   原則・注記
+   ============================================================ */
+.notes{margin-top:2.5rem}
+.notes h2{
+  font-family:var(--font-body);font-weight:700;font-size:20px;
+  margin:0 0 .2rem;letter-spacing:.02em;
+}
+.notes .sub{font-size:12.5px;color:var(--ink-3);margin:0 0 1rem}
+.principles{
+  display:grid;gap:1px;background:var(--rule-soft);
+  border:1px solid var(--rule-soft);border-radius:var(--r);overflow:hidden;
+  grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+}
+.pr{background:var(--surface);padding:1rem}
+.pr h4{margin:0 0 .35rem;font-size:13.5px;font-weight:700;letter-spacing:.01em}
+.pr .n{font-family:"IBM Plex Mono",monospace;font-size:10px;color:var(--signal);letter-spacing:.14em;display:block;margin-bottom:.3rem}
+.pr p{margin:0;font-size:12.5px;line-height:1.8;color:var(--ink-2)}
+.caveat{
+  margin-top:1.2rem;border:1px solid var(--rule);border-left:3px solid var(--signal);
+  border-radius:var(--r);background:var(--surface);padding:1rem 1.1rem;
+}
+.caveat h4{margin:0 0 .4rem;font-size:13px;font-weight:700}
+.caveat p{margin:0 0 .5rem;font-size:12.5px;line-height:1.85;color:var(--ink-2)}
+.caveat p:last-child{margin-bottom:0}
+.caveat code{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;
+  background:var(--surface-2);padding:.05rem .3rem;border-radius:3px;
+}
+footer{margin-top:2rem;padding-top:1rem;border-top:1px solid var(--rule-soft);
+  font-size:11.5px;color:var(--ink-3);line-height:1.9;font-family:"IBM Plex Mono",monospace}
+footer a{color:var(--ink-3);text-underline-offset:3px}
+
+@media(max-width:700px){
+  .masthead .wrap{align-items:flex-start;flex-direction:column;gap:.9rem}
+  .status{text-align:left}
+  .controls .wrap{gap:.5rem}
+  .ctl-spacer{display:none}
+  .row-btn{grid-template-columns:22px minmax(0,1fr) 18px;padding:.65rem .7rem}
+  .r-meta{font-size:11px;gap:.4rem .7rem}
+  .blk p{font-size:13px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+@media print{
+  .controls,.timeline-sec,.tl-legend{display:none!important}
+  .brand{padding-right:0}
+  body{background:#fff;color:#000;font-size:10pt}
+  .row{break-inside:avoid;border-color:#bbb}
+  .panel{display:block!important}
+  .chev{display:none}
+}
+</style>
+<script>/* 描画前にテーマを適用（ちらつき防止） */
+(function(){try{var t=localStorage.getItem('md-theme');
+if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
+</head>
+<body>
+<nav class="site-bar" aria-label="サイト"><a class="site-home" href="../"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H6M11 6l-6 6 6 6"/></svg>market<span class="dot">·</span>desk</a><span class="site-here">経済指標マップ</span><button class="site-theme" id="mdTheme" type="button" title="テーマ切替：自動 / ライト / ダーク" aria-label="テーマ切替"><span class="ic" id="mdThemeIc"></span><span id="mdThemeLbl">自動</span></button></nav>
+
+<header class="masthead">
+  <div class="wrap">
+    <div class="brand">
+      <p class="eyebrow">FX Macro Reference · 日本時間基準</p>
+      <h1>経済指標マップ<br><em>USD/JPY</em> とメジャー通貨ペア</h1>
+      <p class="lede">
+        何を測る指標か、なぜ為替が動くのか、そして<b>日本時間の何時に来るのか</b>。
+        発表時刻は各国の夏時間・標準時を日付から自動判定してJSTに換算しています。
+      </p>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+</header>
+
+<section class="timeline-sec">
+  <div class="wrap">
+    <div class="tl-head">
+      <span class="tl-title">JST 24時間タイムライン — 主要指標の着弾点</span>
+      <div class="tl-legend">
+        <span><i style="background:var(--tokyo)"></i>東京</span>
+        <span><i style="background:var(--london)"></i>ロンドン</span>
+        <span><i style="background:var(--newyork)"></i>NY</span>
+        <span><i style="background:var(--watch)"></i>監視時間帯</span>
+      </div>
+    </div>
+    <div class="timeline"><svg id="tl" viewBox="0 0 1000 132" preserveAspectRatio="none"></svg></div>
+  </div>
+</section>
+
+<section class="controls">
+  <div class="wrap">
+    <label class="search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke-width="2.2"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+      <input id="q" type="search" placeholder="指標名・通貨ペア・キーワードで検索" autocomplete="off">
+    </label>
+    <div class="chips" id="cfilter"></div>
+    <button class="chip sig" id="fImp" aria-pressed="false">重要度A以上</button>
+    <button class="chip wt" id="fWatch" aria-pressed="false">監視時間帯のみ</button>
+    <select class="sel" id="sort">
+      <option value="imp">重要度順</option>
+      <option value="time">JST時刻順</option>
+      <option value="country">国別</option>
+    </select>
+    <select class="sel" id="dst">
+      <option value="auto">時刻：自動判定</option>
+      <option value="summer">北半球サマータイム時</option>
+      <option value="winter">北半球標準時</option>
+    </select>
+    <button class="chip" id="expandAll" aria-pressed="false">全部展開</button>
+    <span class="ctl-spacer"></span>
+    <span class="count" id="count"></span>
+  </div>
+</section>
+
+<div class="wrap">
+  <main id="list"></main>
+
+  <section class="notes">
+    <h2>読み方の原則</h2>
+    <p class="sub">個別指標の暗記より、この6つのほうが期待値に効きます。</p>
+    <div class="principles">
+      <div class="pr"><span class="n">01</span><h4>動くのは「結果」ではなく「予想との乖離」</h4>
+        <p>市場価格には発表前に予想が織り込まれています。CPIが前年比3.0%でも、予想3.0%なら理論上は動きません。見るべきは実測値そのものではなく、コンセンサスとの差（サプライズ）と、その符号です。</p></div>
+      <div class="pr"><span class="n">02</span><h4>伝達経路は「指標 → 金利 → 為替」</h4>
+        <p>指標が直接為替を動かすのではなく、<b>政策金利の将来予想を書き換え → 期間金利（特に米2年債利回り）が動き → 内外金利差が変わり → 為替が動く</b>という連鎖です。USD/JPYは特に米金利との連動が強いので、指標発表時は為替より先に米金利を見ると初動の理由が読めます。</p></div>
+      <div class="pr"><span class="n">03</span><h4>第2の経路はリスクセンチメント</h4>
+        <p>金利経路と逆向きに働くことがあります。米指標が極端に弱いと「利下げ期待 → ドル安」と同時に「リスクオフ → 円買い」が起きてUSD/JPYは大きく下げますが、米株高を伴う「弱いがソフトランディング」の弱さだとクロス円が買われて相殺されます。どちらの経路が主導しているかは米株と米金利の組み合わせで判別します。</p></div>
+      <div class="pr"><span class="n">04</span><h4>同時発表なら「本命」を1つ決めておく</h4>
+        <p>雇用統計はNFP・失業率・平均時給が同時に出て、しばしば矛盾します。事前に自分の中で優先順位（例：失業率＞平均時給＞NFP）を決めておかないと、初動の1〜2分で判断が固まりません。CPIなら総合ではなくコア、さらに住居費を除いたコアサービスが本命です。</p></div>
+      <div class="pr"><span class="n">05</span><h4>初動はアルゴの反射、本番は5〜30分後</h4>
+        <p>発表直後の数秒はヘッドライン数値に反応する自動売買が価格を作ります。内訳が読まれて再評価が入るのは数分後で、初動を完全に打ち消す往って来いも珍しくありません。指標を「その瞬間に取る」のと「落ち着いてから方向に乗る」のは別戦略なので、どちらをやるか決めて記録を分けてください。</p></div>
+      <div class="pr"><span class="n">06</span><h4>重要度は固定ではなくレジーム依存</h4>
+        <p>インフレが問題の局面では物価指標が、景気後退が懸念される局面では雇用指標が主役になります。この表の重要度は「近年の平均的な目安」であり、中央銀行が直近の声明で何に言及しているかで格上げ・格下げしてください。判断材料は各会合の声明文と議事要旨です。</p></div>
+    </div>
+
+    <div class="caveat">
+      <h4>発表時刻の確認について</h4>
+      <p>この表に載せているのは各機関の<b>定例スケジュール</b>です。祝日、政府機関の閉鎖、統計制度の変更などで実際の日時はずれます。取引前には必ず一次ソースのリリースカレンダーで確定日時を確認してください（各行に公式リンクを付けています）。</p>
+      <p>重要度と関連指標の記述も、近年の市場の扱われ方をまとめたものであって固定的な事実ではありません。中央銀行が直近の声明・議事要旨で何に言及しているかを見て、自分で更新していく前提で使ってください。</p>
+    </div>
+
+    <footer>
+      発表時刻の一次情報：BLS <a href="https://www.bls.gov/schedule/news_release/" target="_blank" rel="noopener">Release Calendar</a>／BEA <a href="https://www.bea.gov/news/schedule" target="_blank" rel="noopener">Release Schedule</a>／FRB <a href="https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm" target="_blank" rel="noopener">FOMC Calendar</a>／日本銀行 <a href="https://www.boj.or.jp/mopo/mpmsche_minu/index.htm" target="_blank" rel="noopener">金融政策決定会合</a>／ECB <a href="https://www.ecb.europa.eu/press/calendars/mgcgc/html/index.en.html" target="_blank" rel="noopener">Governing Council Calendar</a>／BOE <a href="https://www.bankofengland.co.uk/news/publications" target="_blank" rel="noopener">Publications</a>／RBA <a href="https://www.rba.gov.au/schedules-events/" target="_blank" rel="noopener">Schedules &amp; Events</a>／ABS <a href="https://www.abs.gov.au/release-calendar" target="_blank" rel="noopener">Release Calendar</a>／ONS <a href="https://www.ons.gov.uk/releasecalendar" target="_blank" rel="noopener">Release Calendar</a><br>
+      サマータイム判定：米国＝3月第2日曜〜11月第1日曜、EU/英＝3月最終日曜〜10月最終日曜、豪＝10月第1日曜〜4月第1日曜。切替日当日は現地の切替時刻の関係で1時間ずれる場合があります。
+    </footer>
+  </section>
+</div>
+
+<script>
+/* ============================================================
+   データ
+   region: 現地タイムゾーン識別子
+     US-ET(EST/EDT) / JP / EU-CET / UK / AU-SYD / CN
+   imp: 4=最重要 3=重要 2=中 1=参考
+   ============================================================ */
+const DATA = [
+/* ---------- 米国 ---------- */
+{c:"US",name:"雇用統計（NFP・失業率・平均時給）",en:"Employment Situation",imp:4,
+ local:"08:30",region:"US-ET",freq:"毎月 第1金曜",pairs:"USD/JPY, EUR/USD, ゴールド, 米株指数",
+ what:"米労働省労働統計局（BLS）が発表する米国の月次雇用レポート。事業所調査から非農業部門雇用者数（NFP）と平均時給、家計調査から失業率と労働参加率が同時に出ます。単一の発表で最も広く相場を動かす指標です。",
+ why:"強い雇用は「景気が強い→インフレ圧力が残る→FRBは利下げを急がない」という連想を生み、米短期金利（2年債利回り）が上昇してドル買い・USD/JPY上昇になりやすい。弱ければ逆です。ただし雇用が『崩れるレベルで弱い』場合は、利下げ期待によるドル安と同時にリスクオフの円買いが重なり、USD/JPYが一方向に大きく下げます。過去の改定幅が大きいのも特徴で、前月・前々月の下方修正がヘッドラインの強さを打ち消して初動が反転することが頻繁にあります。",
+ rel:"先行：ADP雇用統計、新規失業保険申請件数、ISM雇用サブ指数、JOLTS求人件数、Challenger人員削減数。同時参照：平均時給の前年比（賃金インフレ）と労働参加率（失業率の質を判定するため）。",
+ src:"https://www.bls.gov/news.release/empsit.toc.htm",srcLabel:"BLS Employment Situation"},
+
+{c:"US",name:"消費者物価指数（CPI・コアCPI）",en:"Consumer Price Index",imp:4,
+ local:"08:30",region:"US-ET",freq:"毎月 第2週前後",pairs:"USD/JPY, EUR/USD, ゴールド, 米株指数",
+ what:"BLSが発表する米国の消費者物価。食品とエネルギーを除いた『コアCPI』が本命で、さらにコアサービスから住居費を除いた通称『スーパーコア』が金融政策の議論で使われます。0.1ポイントの差が相場を動かします。",
+ why:"インフレが高いほどFRBは金融引き締めを維持せざるを得ず、米金利上昇→ドル高。低ければ利下げ余地が広がり米金利低下→ドル安、というのが基本経路です。CPIが強い相場反応を生むのは、①月次で出る物価指標のうち最も速報性が高く、②市場参加者が同じ予想値を共有していて乖離が明確になり、③FOMCまでの政策パスを直接書き換えるためです。住居費（OER）は実勢の家賃に対して1年前後遅行するため、住居費主導の高インフレは持続性が低いと解釈され、反応が鈍ることがあります。",
+ rel:"先行：ISM価格指数、ミシガン大の期待インフレ率、輸入物価指数。後続：PPI（翌日前後）、コアPCE（月末）。CPIとPPIの構成項目からコアPCEはかなりの精度で推計できるため、PCEはCPIの『答え合わせ』になります。",
+ src:"https://www.bls.gov/cpi/",srcLabel:"BLS Consumer Price Index"},
+
+{c:"US",name:"FOMC 政策金利発表・声明・SEP",en:"FOMC Statement",imp:4,
+ local:"14:00",region:"US-ET",freq:"年8回（会見は14:30 ET）",pairs:"USD/JPY, EUR/USD, ゴールド, 米株指数",
+ what:"米連邦公開市場委員会による政策金利（FF金利誘導目標）の決定と声明文。3・6・9・12月の会合では経済見通し（SEP）とドットチャート（参加者の金利見通し分布）が同時公表されます。声明の30分後にFRB議長の記者会見。",
+ why:"政策金利そのものはFF金利先物でほぼ完全に織り込まれているため、金利の数字だけでは動きません。<b>相場を動かすのは声明文の文言変更、ドットチャートの中央値、そして議長会見のトーン</b>です。ここで『今後の利下げ回数の期待』が書き換わり、2年債利回りが動き、金利差を通じて為替が動きます。会見中に方向が二転三転しやすいのは、冒頭発言と質疑応答でニュアンスが変わるためで、日本時間の深夜3〜5時にあたる時間帯です。翌朝に窓を開けて始まるリスクを考慮する必要があります。",
+ rel:"事前：CME FedWatch（FF金利先物から算出した利上げ・利下げ確率）、ベージュブック（会合2週間前）、FOMCメンバーの講演。事後：議事要旨（3週間後）。",
+ src:"https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",srcLabel:"Federal Reserve FOMC Calendar"},
+
+{c:"US",name:"ISM非製造業（サービス業）景況指数",en:"ISM Services PMI",imp:3,
+ local:"10:00",region:"US-ET",freq:"毎月 第3営業日",pairs:"USD/JPY, EUR/USD, 米株指数",
+ what:"全米供給管理協会が購買担当者への調査から作る景況感指数。50が拡大と縮小の分岐点です。米GDPの約7割はサービス業なので、製造業版より実体経済との対応が良いとされます。",
+ why:"景況感の悪化は将来の雇用と物価の減速を示唆するため、利下げ期待→米金利低下→ドル安に働きます。特に注目されるのが<b>仕入価格（Prices Paid）と雇用サブ指数</b>で、前者はCPIの、後者は雇用統計の先行指標として扱われます。ヘッドラインが弱くても仕入価格が高いと『スタグフレーション的』と解釈され、単純なドル安にならないことがあります。10:00 ET発表なので日本時間の23時台〜24時台、NY序盤の流動性がある時間に落ちます。",
+ rel:"S&PグローバルサービスPMI（数日前に速報）、ISM製造業（2営業日前）、地区連銀サーベイ。",
+ src:"https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/",srcLabel:"ISM Report On Business"},
+
+{c:"US",name:"小売売上高",en:"Retail Sales",imp:3,
+ local:"08:30",region:"US-ET",freq:"毎月 中旬",pairs:"USD/JPY, EUR/USD, 米株指数",
+ what:"米国勢調査局が発表する小売・飲食サービスの売上高。自動車・ガソリン・建材・飲食を除いた『コントロールグループ』がGDPの個人消費項目に直結するため、ヘッドラインより重視されます。",
+ why:"米GDPの約7割が個人消費なので、小売売上高は米国景気そのものの代理変数です。強ければ景気拡大→インフレ圧力継続→米金利上昇→ドル高。名目値である点に注意が必要で、インフレ率が高い局面では『価格上昇で名目が伸びているだけで実質は減っている』ことがあり、CPIと合わせて読まないと誤読します。",
+ rel:"先行：週次のRedbook小売売上、消費者信頼感指数、クレジットカード支出データ。同時期：個人消費支出（PCE、月末）。",
+ src:"https://www.census.gov/retail/index.html",srcLabel:"U.S. Census Bureau Retail Trade"},
+
+{c:"US",name:"ISM製造業景況指数",en:"ISM Manufacturing PMI",imp:3,
+ local:"10:00",region:"US-ET",freq:"毎月 第1営業日",pairs:"USD/JPY, EUR/USD, 豪ドル, 米株指数",
+ what:"製造業版のISM。米GDPに占める製造業の比率は1割程度ですが、在庫循環を通じて景気の転換点に対して先行性があるため、規模以上に注目されます。",
+ why:"経路はサービス業版と同じ（景況感→政策金利予想→金利差→為替）ですが、製造業は世界貿易と連動するため<b>豪ドルなど資源国通貨への影響が相対的に大きい</b>のが特徴です。新規受注と在庫の差（受注在庫レシオ）が数ヶ月先の生産の方向を示すため、ヘッドラインより内訳が読まれます。",
+ rel:"S&Pグローバル製造業PMI、ニューヨーク連銀製造業景況指数（エンパイア）、フィラデルフィア連銀景況指数、中国製造業PMI。",
+ src:"https://www.ismworld.org/supply-management-news-and-reports/reports/ism-report-on-business/",srcLabel:"ISM Report On Business"},
+
+{c:"US",name:"PCEデフレーター（コアPCE）",en:"PCE Price Index",imp:3,
+ local:"08:30",region:"US-ET",freq:"毎月 月末近辺",pairs:"USD/JPY, EUR/USD, ゴールド",
+ what:"米商務省経済分析局（BEA）の個人所得・支出統計に含まれる物価指標。<b>FRBが2%目標として公式に採用しているのはCPIではなくこのコアPCE</b>です。個人所得と個人消費支出も同時発表。",
+ why:"政策目標そのものなので理論上は最重要のはずですが、実際の反応はCPIより明確に小さくなります。理由は<b>CPIとPPIの構成項目からコアPCEが高い精度で事前推計できてしまう</b>ためで、発表時点で新規情報がほとんど残っていません。裏を返すと、推計と実測が乖離したときは想定外に大きく動きます。CPIとPCEの差は算出方式（支出ウェイトの更新頻度と代替効果の扱い、医療費の帰属範囲）から生じます。",
+ rel:"先行：CPI（約2週間前）、PPI（約2週間前）。同時発表の個人所得・貯蓄率は消費の持続力を判断する材料。",
+ src:"https://www.bea.gov/data/personal-consumption-expenditures-price-index",srcLabel:"BEA PCE Price Index"},
+
+{c:"US",name:"新規失業保険申請件数",en:"Initial Jobless Claims",imp:2,
+ local:"08:30",region:"US-ET",freq:"毎週 木曜",pairs:"USD/JPY, EUR/USD",
+ what:"米労働省が毎週発表する失業保険の新規申請件数。<b>米国の労働市場データで最も速報性が高い</b>系列で、週次のため労働市場の変化をリアルタイムに近い形で追えます。",
+ why:"平時は反応が小さい指標ですが、<b>労働市場の転換が疑われる局面では重要度が跳ね上がります</b>。単週の数字は祝日・季節調整・特定州の一時解雇で大きくブレるため、4週移動平均で見るのが実務的です。継続受給者数（Continuing Claims）が同時に出ており、こちらは『失業した人が再就職できているか』を示すので、雇用の質の劣化を先に捉えます。",
+ rel:"雇用統計（月次で確認）、Challenger人員削減数、WARN通知。継続受給者数は新規申請より1週遅れの参照期間である点に注意。",
+ src:"https://www.dol.gov/ui/data.pdf",srcLabel:"U.S. Dept. of Labor UI Claims"},
+
+{c:"US",name:"GDP速報値",en:"Gross Domestic Product (Advance)",imp:2,
+ local:"08:30",region:"US-ET",freq:"四半期（速報・改定・確定の3回）",pairs:"USD/JPY, EUR/USD",
+ what:"BEAが発表する四半期の実質GDP成長率（年率換算）。速報値・改定値・確定値の3段階で出ます。同時にGDPデフレーターとコアPCE（四半期ベース）も公表。",
+ why:"反応が小さいのは<b>四半期の遅行データであり、月次指標の積み上げで大半が既に推計済み</b>だからです（アトランタ連銀のGDPNowが代表例）。ただし個人消費の内訳とコアPCEの四半期値は新規情報を含むため、ヘッドラインが予想通りでも内訳で動くことがあります。",
+ rel:"アトランタ連銀 GDPNow（リアルタイム推計）、ニューヨーク連銀 Nowcast、月次の小売売上高・鉱工業生産・貿易統計。",
+ src:"https://www.bea.gov/data/gdp/gross-domestic-product",srcLabel:"BEA Gross Domestic Product"},
+
+{c:"US",name:"ADP雇用統計",en:"ADP National Employment Report",imp:2,
+ local:"08:15",region:"US-ET",freq:"雇用統計の2営業日前（水曜）",pairs:"USD/JPY, EUR/USD",
+ what:"民間給与計算大手ADPが自社顧客データから推計する民間部門の雇用者数。雇用統計の2営業日前に出るため『前哨戦』と呼ばれます。",
+ why:"<b>NFPとの相関は実際にはかなり低く、予測材料としての信頼性は乏しい</b>のが実態です。それでも相場が反応するのは、雇用統計前でポジションが軽くなっており、他に材料がない時間帯だからという需給要因が大きい。ADPで動いた分は雇用統計で往復することが多く、ADPの結果を根拠にNFPのポジションを取るのは統計的な裏付けが弱い判断です。",
+ rel:"雇用統計（2営業日後）。ADPは自社データの手法変更を過去に複数回行っており、時系列の連続性にも留意が必要。",
+ src:"https://adpemploymentreport.com/",srcLabel:"ADP Research Institute"},
+
+{c:"US",name:"JOLTS 求人労働移動調査",en:"Job Openings and Labor Turnover Survey",imp:2,
+ local:"10:00",region:"US-ET",freq:"毎月（参照月が約2ヶ月前）",pairs:"USD/JPY, EUR/USD",
+ what:"求人件数・採用数・自発的離職数（Quits）を示すBLSの統計。求人件数を失業者数で割った<b>V/U比（求人・失業者比率）が労働需給の逼迫度を測る標準的な指標</b>です。",
+ why:"FRB議長が労働市場の需給を語る際にV/U比と自発的離職率に繰り返し言及したことで注目度が上がりました。求人が減っても失業が増えずに需給が緩む『痛みのない引き締め』が成立するかが論点で、そのシナリオが崩れると景気後退懸念に転じます。<b>参照月が約2ヶ月前と遅行性が強い</b>のが弱点で、これが反応を限定している主因です。",
+ rel:"求人サイトIndeedの求人指数（速報性が高い代替データ）、雇用統計、新規失業保険申請件数。",
+ src:"https://www.bls.gov/jlt/",srcLabel:"BLS JOLTS"},
+
+{c:"US",name:"ミシガン大学 消費者信頼感指数（速報）",en:"UMich Consumer Sentiment (Prelim)",imp:2,
+ local:"10:00",region:"US-ET",freq:"毎月 第2金曜前後（確報は月末）",pairs:"USD/JPY, EUR/USD, ゴールド",
+ what:"ミシガン大学の消費者調査。ヘッドラインの信頼感指数より、同時に出る<b>1年先および5〜10年先の期待インフレ率</b>のほうが相場材料として重要です。",
+ why:"期待インフレが上振れると『インフレ期待のアンカーが外れる』懸念が生じ、中央銀行はより強い引き締めで対応せざるを得なくなります。実際、2022年6月には5〜10年期待インフレの上振れ報道がFRBの利上げ幅拡大の判断材料になったと広く報じられました。ヘッドラインの信頼感自体は政治的な党派バイアスとガソリン価格に強く影響されるため、実際の消費行動との対応は弱いことが知られています。",
+ rel:"コンファレンスボード消費者信頼感指数（労働市場の評価に重み）、CPI、ガソリン小売価格。",
+ src:"https://www.sca.isr.umich.edu/",srcLabel:"University of Michigan Surveys of Consumers"},
+
+{c:"US",name:"FOMC議事要旨",en:"FOMC Minutes",imp:1,
+ local:"14:00",region:"US-ET",freq:"各会合の3週間後",pairs:"USD/JPY, EUR/USD",
+ what:"FOMC会合の議論の要旨。3週間前の会合で何が議論されたかの詳細が公開されます。",
+ why:"反応が小さいのは<b>会合直後の声明と議長会見で結論と論理は既に開示されており、3週間分の新しい経済データが後から出ている</b>ためです。ただし『複数の参加者が◯◯を主張した』という反対意見の厚みが判明することがあり、次回会合での方針転換の可能性を織り込み直す材料になります。日本時間の深夜3〜4時発表で流動性が薄く、ヘッドラインだけでスパイクしやすい点は注意。",
+ rel:"FOMC声明・議長会見（3週間前）、その後のFOMCメンバー講演。",
+ src:"https://www.federalreserve.gov/monetarypolicy/fomccalendars.htm",srcLabel:"Federal Reserve FOMC Calendar"},
+
+/* ---------- 日本 ---------- */
+{c:"JP",name:"日銀金融政策決定会合",en:"BOJ Monetary Policy Meeting",imp:4,
+ local:"12:00",region:"JP",timeNote:"時刻非公表（11:00〜13:00頃）／総裁会見 15:30",
+ freq:"年8回・2日間",pairs:"USD/JPY, EUR/JPY, クロス円全般, 日経平均",
+ what:"日本銀行の政策委員9名による金融政策の決定。政策金利、長期国債買入れ方針などを決めます。年4回（1・4・7・10月）は『経済・物価情勢の展望（展望レポート）』が同時公表され、政策委員の物価見通しが更新されます。",
+ why:"<b>主要中央銀行のなかで最もサプライズが出やすい</b>のが構造的な特徴です。理由は3つ。①発表時刻が事前に公表されず、2日目の11時〜13時のどこかに出る（市場は待ち続ける必要がある）。②FRBのドットチャートに相当する参加者別の金利見通しを公表しないため、次の一手の織り込みが常に粗い。③日本時間の昼という、東京勢しかいない相対的に薄い流動性の時間帯に出る。実質的な本番は<b>15:30からの総裁会見</b>で、正午の声明では動かず会見のトーンで方向が決まるパターンが繰り返し起きています。『発表が12:30を過ぎたら政策変更の可能性』という経験則が語られますが、統計的な裏付けは強くないため参考程度に。",
+ rel:"事前：全国CPI・東京都区部CPI、春闘の賃上げ率（連合の集計、3月〜7月）、実質賃金、日銀短観。事後：主な意見（会合の約10営業日後 8:50）、議事要旨（次々回会合後 8:50）。",
+ src:"https://www.boj.or.jp/mopo/mpmdeci/index.htm",srcLabel:"日本銀行 金融政策決定会合の運営"},
+
+{c:"JP",name:"為替介入・財務省要人発言",en:"MOF FX Intervention / Verbal Intervention",imp:4,
+ local:"19:00",region:"JP",timeNote:"介入実績は月末営業日 19:00／口先介入は不定期",
+ freq:"不定期",pairs:"USD/JPY, クロス円全般",
+ what:"財務省が決定し日銀が実務を執行する外国為替市場への介入。および財務官・財務大臣による牽制発言（口先介入）。月次の介入実績は月末営業日19:00、日次の内訳は四半期ごとに公表されます。",
+ why:"介入は金利差というファンダメンタルズを変えないため、<b>トレンドそのものを反転させる力は構造的に限定的</b>です。実際の効果は「動くスピードを落とす」「投機的なポジションの一斉巻き戻しを誘発する」ことにあります。円買い介入は外貨準備の範囲内でしか行えない物理的な上限があり（円売り介入と非対称）、市場はその残弾を意識します。実務上は<b>発言の語彙のエスカレーション段階が事前シグナル</b>になります：『注視』→『緊張感を持って注視』→『あらゆる手段を排除しない』→『断固たる措置』『行き過ぎた投機的な動き』。最後の段階に入ってからの薄い時間帯（早朝・欧州時間の谷間）は特に警戒が必要です。",
+ rel:"日米金利差（介入の背景）、財務省の外貨準備高（月初）、日銀当座預金の増減から推計される『覆面介入』観測。",
+ src:"https://www.mof.go.jp/policy/international_policy/reference/feint/index.htm",srcLabel:"財務省 外国為替平衡操作の実施状況"},
+
+{c:"JP",name:"全国消費者物価指数",en:"Japan National CPI",imp:3,
+ local:"08:30",region:"JP",freq:"毎月 19日前後の金曜",pairs:"USD/JPY, EUR/JPY",
+ what:"総務省が発表する日本の消費者物価。日銀が中心的に見るのは<b>生鮮食品を除く総合（コアCPI）</b>、さらに生鮮食品及びエネルギーを除く総合（いわゆるコアコア）です。",
+ why:"日銀の利上げ観測に直結するため理屈上は重要ですが、実際の反応は米CPIより明確に小さくなります。理由は<b>約3週間前に東京都区部CPIが先行して発表されており、新規情報が乏しい</b>ためです。それでも日銀が正常化局面にある間は、物価上昇の主因が輸入コスト（円安・資源高）なのか国内の賃金なのかという内訳が重要で、サービス価格の上昇率が持続的な物価上昇の判定材料になります。",
+ rel:"先行：東京都区部CPI（約3週間前）、企業物価指数（日銀、上流の価格）。関連：実質賃金、春闘賃上げ率。",
+ src:"https://www.stat.go.jp/data/cpi/",srcLabel:"総務省統計局 消費者物価指数"},
+
+{c:"JP",name:"東京都区部 消費者物価指数",en:"Tokyo CPI",imp:2,
+ local:"08:30",region:"JP",freq:"毎月 26日前後",pairs:"USD/JPY, EUR/JPY",
+ what:"東京都区部を対象とした当月分のCPI速報。全国CPIより約3週間早く、しかも参照月が1ヶ月新しいものが出ます。",
+ why:"<b>実質的にこちらが日本の物価の先行指標</b>です。全国CPIとの連動性が高いため、市場は東京CPIの時点で全国分を織り込みにいきます。日本時間8:30という東京時間の朝に出るので、日中に日銀観測を織り込む動きが出やすい時間帯です。",
+ rel:"全国CPI（約3週間後）、企業向けサービス価格指数（日銀）。",
+ src:"https://www.stat.go.jp/data/cpi/",srcLabel:"総務省統計局 消費者物価指数"},
+
+{c:"JP",name:"日銀短観",en:"BOJ Tankan Survey",imp:2,
+ local:"08:50",region:"JP",freq:"年4回（4月初・7月初・10月初・12月中旬）",pairs:"USD/JPY, 日経平均",
+ what:"日銀が約1万社に実施する企業短期経済観測調査。大企業製造業の業況判断DIが代表指標ですが、FXの観点では<b>企業の『想定為替レート』</b>が同時に公表される点が重要です。",
+ why:"業況判断DIは日銀の景気判断に直接使われるため、金融政策の方向性を占う材料になります。想定為替レートは輸出企業が事業計画で前提にしているUSD/JPYの水準で、<b>実勢レートがこれを大きく上回っている（円安）と、輸出企業に大規模な円転（ドル売り）needが発生している</b>と推測できます。これは短期の値動きではなく実需フローの構造を読む材料です。",
+ rel:"設備投資計画（GDPの設備投資項目の先行）、日銀の展望レポート（短観の直後の会合で更新される）。",
+ src:"https://www.boj.or.jp/statistics/tk/index.htm",srcLabel:"日本銀行 全国企業短期経済観測調査"},
+
+{c:"JP",name:"毎月勤労統計（実質賃金）",en:"Monthly Labour Survey / Real Wages",imp:2,
+ local:"08:30",region:"JP",freq:"毎月 上旬",pairs:"USD/JPY",
+ what:"厚生労働省が発表する現金給与総額と実質賃金。名目賃金の伸びから物価上昇分を差し引いたものが実質賃金です。",
+ why:"日銀が金融正常化の条件として繰り返し掲げてきたのが<b>『賃金と物価の好循環』</b>であり、その成否を直接測るのがこの統計です。物価だけが上がって実質賃金がマイナスの状態は、日銀の定義では持続的な2%物価目標の達成とは見なされません。そのため実質賃金のプラス転換・定着は利上げ判断の前提条件として読まれます。サンプル替えによる断層が生じやすく、『共通事業所ベース』の数字を併記して見るのが実務的です。",
+ rel:"春闘の賃上げ率（連合の第1回集計は3月中旬、最終集計は7月）、全国CPI（実質化の分母）。",
+ src:"https://www.mhlw.go.jp/toukei/list/30-1.html",srcLabel:"厚生労働省 毎月勤労統計調査"},
+
+{c:"JP",name:"貿易統計",en:"Japan Trade Balance",imp:1,
+ local:"08:50",region:"JP",freq:"毎月 中旬（速報は翌月上旬）",pairs:"USD/JPY",
+ what:"財務省が発表する輸出入額と貿易収支。短期の値動きへの影響はほぼありませんが、円の需給構造を理解する上での基礎データです。",
+ why:"為替の実需フローを規定します。貿易赤字が構造化していれば、輸入代金の支払いのために恒常的な円売り・外貨買いが発生し続けることになり、これは金利差とは独立した円安圧力になります。逆もまた然り。<b>短期トレードの発注根拠にはならないが、円のトレンドの背景を説明する変数</b>という位置づけです。より広い概念としては経常収支（貿易＋所得＋サービス）を見るべきで、日本は所得収支の黒字が大きいものの、その多くが海外で再投資され円転されない点も論点になります。",
+ rel:"国際収支状況（財務省・日銀、経常収支）、原油価格（輸入額の主変数）、対外・対内証券投資（財務省 週次）。",
+ src:"https://www.customs.go.jp/toukei/info/",srcLabel:"財務省 貿易統計"},
+
+/* ---------- ユーロ圏 ---------- */
+{c:"EU",name:"ECB 理事会（政策金利発表）",en:"ECB Monetary Policy Decision",imp:4,
+ local:"14:15",region:"EU-CET",timeNote:"会見は14:45 CET（JSTで30分後）",
+ freq:"年8回・木曜",pairs:"EUR/USD, EUR/JPY, GBP/USD",
+ what:"欧州中央銀行の政策理事会による政策金利決定。主要3金利のうち、実質的な政策スタンスを決めているのは<b>中銀預金金利（Deposit Facility Rate）</b>です。決定は14:15 CET、ラガルド総裁の記者会見が14:45 CETから。",
+ why:"決定そのものは事前のガイダンスで概ね織り込まれるため、動くのは<b>会見の内容</b>です。ECBはFRBと違いドットチャートを公表せず、代わりに3・6・9・12月の会合で『ユーロシステム・スタッフ経済見通し』（インフレとGDPの予測）を公表します。この4回は重要度が上がります。もう一つの特徴が加盟国間の意見対立で、ハト派（南欧）とタカ派（ドイツ・オランダ等）の綴じ目がリーク報道として会合後に流れ、当日の反応を打ち消すことがあります。<b>日本時間では21時台（夏）／22時台（冬）で、米国指標と時間帯が重なりやすい</b>点に注意。",
+ rel:"事前：ユーロ圏HICP、PMI速報、ECB高官の講演。事後：金融政策決定会合の議事要旨（Accounts、約4週間後）。ドイツ国債と米国債の利回り差がEUR/USDの主要ドライバー。",
+ src:"https://www.ecb.europa.eu/press/govcdec/mopo/html/index.en.html",srcLabel:"ECB Monetary policy decisions"},
+
+{c:"EU",name:"ユーロ圏 消費者物価指数（HICP速報）",en:"Euro Area HICP Flash Estimate",imp:3,
+ local:"11:00",region:"EU-CET",freq:"毎月 月末〜翌月初",pairs:"EUR/USD, EUR/JPY",
+ what:"Eurostatが発表するユーロ圏の消費者物価速報。ECBの物価目標に直接対応する指標で、エネルギーと食品を除いたコアHICP、およびサービス価格の上昇率が注目されます。",
+ why:"ECBの利下げ・利上げペースを直接書き換えるため、EUR/USDへの影響が大きい指標です。ただし<b>発表前の数日間にドイツ・フランス・スペイン・イタリアの各国分が個別に出ており、それを積み上げるとユーロ圏全体はかなりの精度で推計できます</b>。そのため各国分が出そろった時点で相場は動き始めており、ユーロ圏全体の発表時点での追加的な反応は限定的になることが多い。サービスインフレは賃金と連動するためECBが最も重視しており、この項目の上振れは反応が大きくなります。",
+ rel:"先行：独・仏・西・伊の各国CPI（1〜2日前）、ユーロ圏PMIの価格サブ指数、交渉賃金指数（ECB 四半期）。",
+ src:"https://ec.europa.eu/eurostat/web/hicp",srcLabel:"Eurostat HICP"},
+
+{c:"EU",name:"ユーロ圏・独 PMI速報（HCOB）",en:"HCOB Flash PMI",imp:3,
+ local:"10:00",region:"EU-CET",timeNote:"ドイツは09:30 CET、ユーロ圏は10:00 CET",
+ freq:"毎月 下旬",pairs:"EUR/USD, EUR/JPY",
+ what:"S&Pグローバルがハンブルク商業銀行（HCOB）と作成するユーロ圏の購買担当者景気指数。製造業・サービス業・総合が同時に出ます。フランス→ドイツ→ユーロ圏全体の順に約30分刻みで発表されます。",
+ why:"ユーロ圏は米国と違ってISMのような月初の景況感指標がないため、<b>PMIが実質的に景気の主指標</b>として機能します。ECBの成長見通しを左右し、金利予想を通じてユーロを動かします。フランス→ドイツ→全体という発表順のため、フランス分で方向が出てドイツ分で加速する、という連続的な値動きになりやすい構造です。日本時間の夕方（17時台〜18時台）で、東京とロンドンの端境期にあたります。",
+ rel:"独Ifo景況感（数日後）、独ZEW、ユーロ圏鉱工業生産、ECBの経済見通し。",
+ src:"https://www.pmi.spglobal.com/Public/Release/PressReleases",srcLabel:"S&P Global PMI Press Releases"},
+
+{c:"EU",name:"独 Ifo 企業景況感指数",en:"Ifo Business Climate Index",imp:1,
+ local:"10:00",region:"EU-CET",freq:"毎月 下旬",pairs:"EUR/USD, EUR/JPY",
+ what:"Ifo経済研究所がドイツ企業約9,000社に行う調査。現況指数と期待指数から構成されます。ドイツはユーロ圏最大の経済圏なので、ユーロ全体の代理変数として見られます。",
+ why:"企業の『実感』を反映するためZEWより安定しており、ドイツの景気循環との対応が良いとされます。ただしPMI速報が数日前に出ているため新規情報は限定的で、単独で大きく動く指標ではありません。ドイツ経済の構造（製造業・輸出・エネルギー多消費）から、エネルギー価格と中国景気の影響を強く受けます。",
+ rel:"HCOB独PMI（数日前）、独ZEW、独鉱工業生産・製造業受注。",
+ src:"https://www.ifo.de/en/ifo-business-climate-index",srcLabel:"ifo Institute Business Climate Index"},
+
+{c:"EU",name:"独 ZEW 景況感指数",en:"ZEW Indicator of Economic Sentiment",imp:1,
+ local:"11:00",region:"EU-CET",freq:"毎月 中旬",pairs:"EUR/USD, EUR/JPY",
+ what:"ZEW（欧州経済研究センター）が金融市場のアナリスト約350名に行う、6ヶ月先の景況期待を問う調査。",
+ why:"回答者が金融市場関係者なので、<b>実体経済というより株価と金利の動きを後追いする傾向</b>があり、ブレが大きい。予測力については学術的にも評価が分かれます。それでも月中の材料が乏しい時間帯に出るため、短期的なスパイクを生むことはあります。Ifoが『企業の実感』ならZEWは『市場の期待』という対比で理解すると位置づけが明確になります。",
+ rel:"独Ifo（約2週間後）、ドイツ株DAX、独国債利回り。",
+ src:"https://www.zew.de/en/press/zew-financial-market-survey",srcLabel:"ZEW Financial Market Survey"},
+
+/* ---------- 英国 ---------- */
+{c:"GB",name:"BOE 金融政策委員会（MPC）",en:"Bank of England MPC Decision",imp:4,
+ local:"12:00",region:"UK",timeNote:"年4回はMPR公表＋総裁会見 12:30 London",
+ freq:"年8回・木曜",pairs:"GBP/USD, GBP/JPY, EUR/GBP",
+ what:"イングランド銀行の金融政策委員会（9名）による政策金利決定。<b>各委員の投票結果（何対何で決まったか）が同時に公表される</b>のが最大の特徴です。年4回は金融政策報告（MPR）と総裁会見を伴います。",
+ why:"投票の内訳が公開されるため、<b>政策金利が据え置きでも票割れの変化だけでポンドが大きく動きます</b>。例えば9対0の据え置きから7対2（2名が利下げ支持）に変われば、次回の利下げ確率が跳ね上がり、ポンド安になります。FRBやECBが原則コンセンサス方式であるのに対し、BOEは個人の投票を明示する制度設計なので、政策の方向転換を最も早く読み取れる中央銀行です。ポンドは主要通貨のなかで流動性が相対的に薄く、値幅が出やすい点も反応の大きさに寄与しています。",
+ rel:"事前：英CPI（サービスインフレ）、英雇用統計（賃金）。同時：会合議事録（声明と同時公表）。委員個別の講演がタカ・ハトのポジションを示す。",
+ src:"https://www.bankofengland.co.uk/monetary-policy/monetary-policy-summary-and-minutes",srcLabel:"Bank of England Monetary Policy Summary"},
+
+{c:"GB",name:"英 消費者物価指数",en:"UK Consumer Price Index",imp:3,
+ local:"07:00",region:"UK",freq:"毎月 中旬 水曜",pairs:"GBP/USD, GBP/JPY, EUR/GBP",
+ what:"英国国家統計局（ONS）が発表するCPI。総合・コアに加え、<b>サービスCPI</b>が公表され、これがBOEの判断で最も重視されている系列です。",
+ why:"英国はインフレの粘着性が主要国のなかで際立って高い局面が続いてきたため、CPIがそのままBOEの政策パスを決めます。サービスインフレが重視されるのは、財の価格が国際商品市況で決まるのに対し、サービス価格は国内の賃金動向をほぼそのまま反映するためで、<b>国内発の持続的インフレの純度が高い指標</b>だからです。日本時間15:00（夏）／16:00（冬）と、東京クローズ直後・ロンドン早朝の流動性が変わるタイミングに落ちます。",
+ rel:"英雇用統計の平均賃金（サービス価格の先行変数）、英PPI、英小売物価指数RPI（一部の契約で使われる旧指標）。",
+ src:"https://www.ons.gov.uk/economy/inflationandpriceindices",srcLabel:"ONS Inflation and Price Indices"},
+
+{c:"GB",name:"英 雇用統計（失業率・平均賃金）",en:"UK Labour Market Overview",imp:3,
+ local:"07:00",region:"UK",freq:"毎月 中旬 火曜",pairs:"GBP/USD, GBP/JPY, EUR/GBP",
+ what:"ONSが発表する英国の雇用統計。失業率、雇用者数、そして<b>平均賃金（ボーナス除く、3ヶ月前年比）</b>が公表されます。",
+ why:"BOEが賃金主導のインフレを最大の懸念としてきたため、平均賃金（ボーナス除く）が本命です。ボーナスを除くのは一時金の変動に左右されない基調賃金を見るためです。<b>近年は労働力調査（LFS）の回収率低下によりデータ品質に疑義が呈されており</b>、ONS自身が失業率などを実験的統計として扱った経緯があります。市場もこれを認識しており、失業率よりPAYEの給与支払者数（税務データ由来で精度が高い）を重視する動きがあります。",
+ rel:"英CPIのサービス項目、BOE の Decision Maker Panel（企業の賃金・価格見通し調査）、求人件数（Vacancies）。",
+ src:"https://www.ons.gov.uk/employmentandlabourmarket/peopleinwork/employmentandemployeetypes/bulletins/uklabourmarket/latest",srcLabel:"ONS UK Labour Market"},
+
+{c:"GB",name:"英 月次GDP",en:"UK Monthly GDP",imp:1,
+ local:"07:00",region:"UK",freq:"毎月 中旬",pairs:"GBP/USD, GBP/JPY",
+ what:"ONSが発表する月次のGDP。<b>主要国で月次GDPを公表しているのは英国くらい</b>で、四半期を待たずに景気の方向が確認できます。",
+ why:"景気の減速はBOEの利下げ観測を強めてポンド安に働きますが、月次GDPは天候・ストライキ・祝日配置の影響を強く受けてブレるため、単月の数字が政策判断を動かすことは稀です。3ヶ月移動平均で見るのが実務的。単独では小さい指標ですが、鉱工業生産・貿易収支と同時発表されるため合わせ技で動くことがあります。",
+ rel:"英PMI、英小売売上高、BOEの成長見通し（MPR）。",
+ src:"https://www.ons.gov.uk/economy/grossdomesticproductgdp",srcLabel:"ONS Gross Domestic Product"},
+
+/* ---------- 豪州・中国 ---------- */
+{c:"AU",name:"RBA 金融政策決定",en:"RBA Monetary Policy Decision",imp:4,
+ local:"14:30",region:"AU-SYD",timeNote:"総裁会見は現地15:30（JSTで1時間後）",
+ freq:"年8回・2日間",pairs:"AUD/USD, AUD/JPY, NZD/USD",
+ what:"オーストラリア準備銀行の金融政策理事会によるキャッシュレート（政策金利）の決定。2024年に年11回から年8回の2日間開催に変更され、決定は2日目の現地14:30、総裁会見が15:30に行われます。議事要旨は2週間後、四半期ごとの金融政策報告（SMP）は2・5・8・11月の会合と同時公表。",
+ why:"金利差がAUD/USDと AUD/JPY を動かす基本経路は他国と同じですが、<b>日本時間の昼過ぎ（12:30 または 13:30）という薄い時間帯に出る</b>のが実務上の最大の特徴です。東京勢の一部しかおらず、欧州勢が入ってくる前なので、スプレッドが広がりやすく約定が滑りやすい。豪ドルは資源価格と中国景気の影響も強く受けるため、RBAの決定だけで方向が決まらないことも多い。",
+ rel:"豪CPI（月次）、豪雇用統計、中国の景気指標、鉄鉱石価格。議事要旨（2週間後 現地11:30）。",
+ src:"https://www.rba.gov.au/monetary-policy/int-rate-decisions/",srcLabel:"RBA Monetary Policy Decisions"},
+
+{c:"AU",name:"豪 消費者物価指数（月次）",en:"Australia Monthly CPI",imp:3,
+ local:"11:30",region:"AU-SYD",freq:"毎月 最終水曜",pairs:"AUD/USD, AUD/JPY",
+ what:"豪州統計局（ABS）が発表する消費者物価。<b>2025年11月（10月分）から、従来の四半期CPIに代わって月次CPIが豪州の主要なインフレ指標に移行しました</b>。RBAが目標とするのは総合ではなく<b>トリム平均（Trimmed Mean）</b>で、これが実質的な本命です。四半期データは3・6・9・12月分の月次公表に併載される形で継続しています。",
+ why:"RBAは2〜3%のインフレ目標を明示しており、CPIの結果がそのまま利上げ・利下げの確率を書き換えるため、豪ドルへの影響は直接的です。トリム平均が使われるのは、上下の極端な変動品目を統計的に除去して基調的なインフレを取り出すためで、総合CPIが燃料価格や政府の電気料金補助で歪むことが多い豪州では特に有効な処理です。<b>四半期から月次への移行によって、豪州のインフレ関連イベントは年4回から年12回に増えました</b>。月次データは四半期より変動が大きくなる点にABS自身も注意を促しています。",
+ rel:"豪賃金価格指数（WPI、四半期）、RBAのSMP（四半期の見通し）、原油・電気料金の政策変更。",
+ src:"https://www.abs.gov.au/statistics/economy/price-indexes-and-inflation/consumer-price-index-australia/latest-release",srcLabel:"ABS Consumer Price Index, Australia"},
+
+{c:"AU",name:"豪 雇用統計",en:"Australia Labour Force",imp:3,
+ local:"11:30",region:"AU-SYD",freq:"毎月 中旬 木曜",pairs:"AUD/USD, AUD/JPY",
+ what:"ABSが発表する豪州の雇用者数増減と失業率。<b>フルタイムとパートタイムの内訳</b>が同時に出ます。",
+ why:"RBAは完全雇用と物価安定の二重の使命を持つため、雇用の強さが利上げ余地の判断材料になります。実務上の注意点は<b>単月のブレが極端に大きい</b>ことで、サンプルの入れ替え（毎月8分の1が入れ替わる仕組み）に起因する見かけの変動が頻繁に起きます。総数が強くてもパートタイム増・フルタイム減なら労働市場の質は劣化しており、初動と反対に戻ることがあります。",
+ rel:"豪求人広告件数（ANZ-Indeed）、豪CPI、RBA の SMP における失業率見通し。",
+ src:"https://www.abs.gov.au/statistics/labour/employment-and-unemployment/labour-force-australia/latest-release",srcLabel:"ABS Labour Force, Australia"},
+
+{c:"CN",name:"中国 製造業PMI（国家統計局）",en:"China Official Manufacturing PMI",imp:2,
+ local:"09:30",region:"CN",freq:"毎月 月末",pairs:"AUD/USD, AUD/JPY, NZD/USD",
+ what:"中国国家統計局が発表する公式PMI。大企業・国有企業のウェイトが高いのが特徴です。数日後に民間版のRatingDog（旧Caixin）製造業PMIが出て、こちらは中小・輸出企業のウェイトが高くなります。",
+ why:"豪ドルにとって中国は<b>最大の輸出先であり、鉄鉱石需要の実質的な決定要因</b>です。中国の製造業活動が鈍れば鉄鉱石価格が下がり、豪州の交易条件が悪化し、豪ドル安につながります。この経路は金利差とは独立しており、RBAがタカ派でも中国が悪ければ豪ドルが上がらないという状況が生じます。日本時間10:30発表で、東京時間の午前に落ちます。中国指標は統計の信頼性に対する市場の評価が高くないため、反応は数値の割に限定的なことが多い。",
+ rel:"RatingDog（旧Caixin）製造業PMI（数日後）、鉄鉱石価格、中国の不動産投資・新築住宅価格、中国GDP。",
+ src:"https://www.stats.gov.cn/english/PressRelease/",srcLabel:"National Bureau of Statistics of China"}
+];
+
+/* ============================================================
+   夏時間判定
+   ============================================================ */
+function nthSun(y,m,n){const d=new Date(Date.UTC(y,m,1));let day=1+((7-d.getUTCDay())%7);return new Date(Date.UTC(y,m,day+(n-1)*7));}
+function lastSun(y,m){const d=new Date(Date.UTC(y,m+1,0));return new Date(Date.UTC(y,m,d.getUTCDate()-d.getUTCDay()));}
+function dstFlags(now){
+  const y=now.getUTCFullYear(), t=Date.UTC(now.getUTCFullYear(),now.getUTCMonth(),now.getUTCDate());
+  const us = t>=nthSun(y,2,2).getTime() && t<nthSun(y,10,1).getTime();
+  const eu = t>=lastSun(y,2).getTime() && t<lastSun(y,9).getTime();
+  const au = t>=nthSun(y,9,1).getTime() || t<nthSun(y,3,1).getTime();
+  return {us,eu,uk:eu,au};
+}
+/* region → JSTへの時差（分） */
+function offsetMin(region,f){
+  switch(region){
+    case "US-ET": return (f.us?13:14)*60;
+    case "EU-CET":return (f.eu?7:8)*60;
+    case "UK":    return (f.uk?8:9)*60;
+    case "AU-SYD":return (f.au?-2:-1)*60;
+    case "CN":    return 60;
+    default:      return 0;
+  }
+}
+function toJST(local,region,f){
+  const [h,m]=local.split(":").map(Number);
+  let t=h*60+m+offsetMin(region,f);
+  let day=0;
+  while(t<0){t+=1440;day--;}
+  while(t>=1440){t-=1440;day++;}
+  return {min:t,day,text:String(Math.floor(t/60)).padStart(2,"0")+":"+String(t%60).padStart(2,"0")};
+}
+
+/* ============================================================
+   状態
+   ============================================================ */
+const S={q:"",countries:new Set(),impOnly:false,watchOnly:false,sort:"imp",dst:"auto",expandAll:false,
+         watchStart:21*60,watchEnd:24*60};
+const COUNTRY={US:"米国",JP:"日本",EU:"ユーロ圏",GB:"英国",AU:"豪州",CN:"中国"};
+const IMPNAME={4:"最重要",3:"重要",2:"中",1:"参考"};
+
+function flags(){
+  const now=new Date();
+  if(S.dst==="summer")return {us:true,eu:true,uk:true,au:false};
+  if(S.dst==="winter")return {us:false,eu:false,uk:false,au:true};
+  return dstFlags(now);
+}
+
+/* ============================================================
+   描画：ステータス
+   ============================================================ */
+function renderStatus(){
+  const f=flags();
+  const now=new Date();
+  const jst=new Intl.DateTimeFormat("ja-JP",{timeZone:"Asia/Tokyo",year:"numeric",month:"2-digit",day:"2-digit",
+    weekday:"short",hour:"2-digit",minute:"2-digit",hour12:false}).format(now);
+  const auto = S.dst==="auto";
+  const row=(label,on,onTxt,offTxt)=>
+    `<span class="dst-line"><i class="dot ${on?"on":"off"}"></i>${label} <b>${on?onTxt:offTxt}</b></span>`;
+  document.getElementById("status").innerHTML=
+    `<span class="dst-line">JST <b>${jst}</b></span>`+
+    row("米国","us" in f?f.us:false,"夏時間 EDT","標準時 EST").replace("undefined","")+
+    row("欧/英",f.eu,"夏時間 CEST/BST","標準時 CET/GMT")+
+    row("豪州",f.au,"夏時間 AEDT","標準時 AEST")+
+    `<span class="dst-line" style="opacity:.7">${auto?"日付から自動判定":"手動指定中"}</span>`;
+}
+
+/* ============================================================
+   描画：タイムライン
+   ============================================================ */
+function renderTimeline(){
+  const f=flags();
+  const W=1000,H=132,padL=6,padR=6,axisY=H-24,plotW=W-padL-padR;
+  const x=min=>padL+(min/1440)*plotW;
+  const SESSIONS=[
+    {n:"TOKYO",a:9*60,b:15*60,c:"var(--tokyo)"},
+    {n:"LONDON",a:(f.uk?16:17)*60,b:1440,c:"var(--london)"},
+    {n:"NEW YORK",a:(f.us?21:22)*60,b:1440,c:"var(--newyork)"}
+  ];
+  let s="";
+  // セッション帯
+  SESSIONS.forEach((se,i)=>{
+    const y=8+i*11;
+    s+=`<rect class="tl-band" x="${x(se.a)}" y="${y}" width="${x(se.b)-x(se.a)}" height="8" rx="2" fill="${se.c}"/>`;
+    s+=`<text class="tl-band-label" x="${x(se.a)+4}" y="${y+6.4}">${se.n}</text>`;
+  });
+  // 監視時間帯
+  s+=`<rect class="tl-watch" x="${x(S.watchStart)}" y="4" width="${x(S.watchEnd)-x(S.watchStart)}" height="${axisY-4}"/>`;
+  s+=`<line class="tl-watch-edge" x1="${x(S.watchStart)}" y1="4" x2="${x(S.watchStart)}" y2="${axisY}"/>`;
+  s+=`<line class="tl-watch-edge" x1="${x(S.watchEnd)}" y1="4" x2="${x(S.watchEnd)}" y2="${axisY}"/>`;
+  s+=`<text class="tl-watch-label" x="${x(S.watchStart)+5}" y="${axisY-4}">監視時間帯 21:00–24:00</text>`;
+  // 軸
+  s+=`<line class="tl-axis" x1="${padL}" y1="${axisY}" x2="${W-padR}" y2="${axisY}"/>`;
+  for(let h=0;h<=24;h+=3){
+    s+=`<line class="tl-axis" x1="${x(h*60)}" y1="${axisY}" x2="${x(h*60)}" y2="${axisY+4}" opacity=".6"/>`;
+    s+=`<text class="tl-hour" x="${x(h*60)+(h===24?-16:2)}" y="${axisY+15}">${String(h%24).padStart(2,"0")}:00</text>`;
+  }
+  // ティック（重なりを段に振り分け）
+  const items=DATA.map(d=>({d,t:toJST(d.local,d.region,f)}))
+    .sort((a,b)=>a.t.min-b.t.min);
+  const lanes=[]; // 各レーンの最後のx
+  const cs=getComputedStyle(document.documentElement);
+  const V=n=>cs.getPropertyValue(n).trim();
+  const CC={US:V("--london"),JP:V("--signal"),EU:V("--newyork"),GB:"#8E44AD",AU:V("--ok"),CN:V("--tokyo")};
+  items.forEach(it=>{
+    const px=x(it.t.min);
+    let lane=0;
+    while(lanes[lane]!==undefined && px-lanes[lane]<9) lane++;
+    lanes[lane]=px;
+    const hgt=6+it.d.imp*4.5;
+    const y=axisY-4-hgt-lane*3.5;
+    const dayMark=it.t.day>0?"翌":it.t.day<0?"前":"";
+    s+=`<g class="tl-tick" tabindex="0" role="button" data-id="${DATA.indexOf(it.d)}">
+      <title>${it.d.name} — JST ${dayMark}${it.t.text}（${IMPNAME[it.d.imp]}）</title>
+      <rect x="${px-1.6}" y="${y}" width="3.2" height="${hgt}" rx="1.4" fill="${CC[it.d.c]}" opacity="${.35+it.d.imp*.16}"/>
+      <rect x="${px-6}" y="${y-4}" width="12" height="${hgt+8}" fill="transparent"/>
+    </g>`;
+  });
+  // 主要イベントの吹き出し
+  const bigs=DATA.map((d,i)=>({d,i,t:toJST(d.local,d.region,f)})).filter(o=>o.d.imp===4);
+  const seen=new Set();
+  bigs.forEach(o=>{
+    const px=x(o.t.min);
+    const key=Math.round(px/40);
+    if(seen.has(key))return; seen.add(key);
+    const label=o.d.name.length>10?o.d.name.slice(0,9)+"…":o.d.name;
+    const anchor = px>W-140?"end":"start";
+    s+=`<text class="tl-callout" x="${px+(anchor==="end"?-4:4)}" y="${axisY-52}" text-anchor="${anchor}">${label}</text>`;
+  });
+  const el=document.getElementById("tl");
+  el.innerHTML=s;
+  el.querySelectorAll(".tl-tick").forEach(g=>{
+    const go=()=>{
+      const id=g.dataset.id;
+      const row=document.querySelector(`.row[data-id="${id}"]`);
+      if(!row){document.getElementById("q").value="";S.q="";render();}
+      const r=document.querySelector(`.row[data-id="${id}"]`);
+      if(r){r.classList.add("open","hit");r.scrollIntoView({block:"center",behavior:"smooth"});
+        setTimeout(()=>r.classList.remove("hit"),1800);}
+    };
+    g.addEventListener("click",go);
+    g.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();go();}});
+  });
+}
+
+/* ============================================================
+   描画：リスト
+   ============================================================ */
+function bars(n){
+  let h="";for(let i=1;i<=4;i++)h+=`<i class="${i<=n?"on":""}"></i>`;
+  return `<span class="sig-bars lv${n}" title="重要度：${IMPNAME[n]}">${h}</span>`;
+}
+function inWatch(min){return min>=S.watchStart&&min<S.watchEnd;}
+
+function render(){
+  const f=flags();
+  const q=S.q.trim().toLowerCase();
+  let rows=DATA.map((d,i)=>({d,i,t:toJST(d.local,d.region,f)}));
+  if(S.countries.size) rows=rows.filter(o=>S.countries.has(o.d.c));
+  if(S.impOnly) rows=rows.filter(o=>o.d.imp>=3);
+  if(S.watchOnly) rows=rows.filter(o=>inWatch(o.t.min));
+  if(q) rows=rows.filter(o=>(o.d.name+o.d.en+o.d.pairs+o.d.what+o.d.why+o.d.rel+COUNTRY[o.d.c]).toLowerCase().includes(q));
+
+  if(S.sort==="imp") rows.sort((a,b)=>b.d.imp-a.d.imp||a.t.min-b.t.min);
+  else if(S.sort==="time") rows.sort((a,b)=>(a.t.day-b.t.day)||(a.t.min-b.t.min)||b.d.imp-a.d.imp);
+  else rows.sort((a,b)=>Object.keys(COUNTRY).indexOf(a.d.c)-Object.keys(COUNTRY).indexOf(b.d.c)||b.d.imp-a.d.imp);
+
+  document.getElementById("count").textContent=`${rows.length} / ${DATA.length} 件`;
+
+  const opened=new Set([...document.querySelectorAll(".row.open")].map(e=>e.dataset.id));
+  let html="",lastGroup=null;
+  rows.forEach(o=>{
+    const d=o.d;
+    let g=null;
+    if(S.sort==="imp")g=IMPNAME[d.imp];
+    else if(S.sort==="country")g=COUNTRY[d.c];
+    if(g&&g!==lastGroup){html+=`<div class="grouphead">${g}</div>`;lastGroup=g;}
+    const nx=o.t.day>0?`<span class="nx">翌</span>`:o.t.day<0?`<span class="nx">前</span>`:"";
+    const w=inWatch(o.t.min)&&o.t.day===0;
+    const isOpen=S.expandAll||opened.has(String(o.i));
+    html+=`
+    <article class="row ${isOpen?"open":""}" data-id="${o.i}">
+      <button class="row-btn" aria-expanded="${isOpen}">
+        ${bars(d.imp)}
+        <span class="r-name">${d.name}<span class="r-en">${d.en}</span></span>
+        <svg class="chev" viewBox="0 0 24 24" fill="none" stroke-width="2.4"><path d="M9 5l7 7-7 7"/></svg>
+        <span class="r-meta">
+          <span class="cc ${d.c}">${d.c}</span>
+          <span class="jst ${w?"inwatch":""}">JST ${nx}${o.t.text}</span>
+          <span class="freq">${d.freq}</span>
+          <span class="r-pairs">${d.pairs}</span>
+        </span>
+      </button>
+      <div class="panel">
+        ${d.timeNote?`<div class="blk"><h3>発表時刻の注記</h3><p>${d.timeNote}（現地 ${d.local}）</p></div>`:""}
+        <div class="blk"><h3>何を測る指標か</h3><p>${d.what}</p></div>
+        <div class="blk why"><h3>結果と為替の関係 — なぜそうなるか</h3><p>${d.why}</p></div>
+        <div class="blk"><h3>関連指標・先行指標</h3><p>${d.rel}</p></div>
+        <div class="srcline"><span>一次ソース</span><a href="${d.src}" target="_blank" rel="noopener">${d.srcLabel} ↗</a></div>
+      </div>
+    </article>`;
+  });
+  document.getElementById("list").innerHTML=html||`<p class="empty">条件に合う指標がありません。検索語かフィルタを見直してください。</p>`;
+  document.querySelectorAll(".row-btn").forEach(b=>{
+    b.addEventListener("click",()=>{
+      const r=b.closest(".row");
+      r.classList.toggle("open");
+      b.setAttribute("aria-expanded",r.classList.contains("open"));
+    });
+  });
+}
+
+/* ============================================================
+   初期化
+   ============================================================ */
+const cf=document.getElementById("cfilter");
+Object.entries(COUNTRY).forEach(([k,v])=>{
+  const b=document.createElement("button");
+  b.className="chip";b.textContent=v;b.setAttribute("aria-pressed","false");
+  b.onclick=()=>{
+    if(S.countries.has(k)){S.countries.delete(k);b.setAttribute("aria-pressed","false");}
+    else{S.countries.add(k);b.setAttribute("aria-pressed","true");}
+    render();
+  };
+  cf.appendChild(b);
+});
+document.getElementById("q").addEventListener("input",e=>{S.q=e.target.value;render();});
+document.getElementById("sort").addEventListener("change",e=>{S.sort=e.target.value;render();});
+document.getElementById("dst").addEventListener("change",e=>{S.dst=e.target.value;renderStatus();renderTimeline();render();
+document.addEventListener("md:theme",()=>{renderTimeline();});});
+const fi=document.getElementById("fImp");
+fi.onclick=()=>{S.impOnly=!S.impOnly;fi.setAttribute("aria-pressed",S.impOnly);render();};
+const fw=document.getElementById("fWatch");
+fw.onclick=()=>{S.watchOnly=!S.watchOnly;fw.setAttribute("aria-pressed",S.watchOnly);render();};
+const ea=document.getElementById("expandAll");
+ea.onclick=()=>{S.expandAll=!S.expandAll;ea.setAttribute("aria-pressed",S.expandAll);
+  if(!S.expandAll)document.querySelectorAll(".row.open").forEach(r=>r.classList.remove("open"));
+  render();};
+
+renderStatus();renderTimeline();render();
+setInterval(renderStatus,30000);
+window.addEventListener("resize",()=>{clearTimeout(window.__rz);window.__rz=setTimeout(renderTimeline,200);});
+</script>
+<script>/* market-desk: テーマ切替（自動→ライト→ダーク）。選択はサイト全体で共有 */
+(function(){
+  var K='md-theme', ORDER=['auto','light','dark'], LBL={auto:'自動',light:'ライト',dark:'ダーク'};
+  var ICON={
+    auto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 000 18z" fill="currentColor" stroke="none"/></svg>',
+    light:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>',
+    dark:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>'
+  };
+  function read(){try{var t=localStorage.getItem(K);if(t==='light'||t==='dark')return t;}catch(e){}return 'auto';}
+  var cur=read();
+  function apply(m){
+    cur=m;
+    var h=document.documentElement;
+    if(m==='auto')h.removeAttribute('data-theme'); else h.setAttribute('data-theme',m);
+    try{ if(m==='auto')localStorage.removeItem(K); else localStorage.setItem(K,m); }catch(e){}
+    var ic=document.getElementById('mdThemeIc'), lb=document.getElementById('mdThemeLbl');
+    if(ic)ic.innerHTML=ICON[m];
+    if(lb)lb.textContent=LBL[m];
+    document.dispatchEvent(new CustomEvent('md:theme',{detail:m}));
+  }
+  function init(){
+    apply(cur);
+    var b=document.getElementById('mdTheme');
+    if(b)b.addEventListener('click',function(){apply(ORDER[(ORDER.indexOf(cur)+1)%3]);});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+</body>
+</html>
