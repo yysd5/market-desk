@@ -38,22 +38,10 @@ GitHub Pages は `main` ブランチの `/(root)` を公開ソースにしてい
 ページ間のリンクは**相対パス**（`./indicators/` など）で書いています。
 これによりプロジェクトサイト（`/market-desk/` 配下）とユーザーサイト（root 直下）のどちらに配置しても壊れません。
 
-## 公開設定
-
-Settings → Pages → Build and deployment
-
-- Source: **Deploy from a branch**
-- Branch: **main** / **/(root)**
-
-GitHub Free の場合、Pages を使うにはリポジトリが Public である必要があります。
-
-## 前身リポジトリ
-
-`yysd5/fx-lot-calculator` はこのリポジトリに統合したため、GitHub Pages の公開を停止しています。
-
 ## デザインの共通化
 
-全ページで以下を共有しています。共通CSSファイルは作らず、各ページに直接埋め込む方針です（1ファイル保存でオフラインでも完結させるため）。
+全ページで以下を共有しています。
+共通CSSファイルは作らず、各ページに直接埋め込む方針です（1ファイル保存でオフラインでも完結させるため）。
 
 - 配色トークン（`--paper` / `--surface` / `--ink` / `--rule` / `--signal` ほか）とライト・ダークの切替
 - 書体：見出し Shippori Mincho B1、本文 Zen Kaku Gothic New、数値 IBM Plex Mono
