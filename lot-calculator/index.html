@@ -209,7 +209,7 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
         <div><span class="bk">pip価値</span><b class="bv" id="setPip">–</b></div>
         <div><span class="bk">1ロット</span><b class="bv" id="setLot">–</b></div>
         <div><span class="bk">ロスカット水準</span><b class="bv" id="setLc">–</b></div>
-        <div><span class="bk">レバレッジ</span><b class="bv">25倍</b></div>
+        <div><span class="bk">必要証拠金率</span><b class="bv">4%（最大25倍）</b></div>
       </div>
       <p class="brokerNote" id="brokerNote"></p>
       <div class="field">
@@ -263,6 +263,7 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
         <div class="cell"><div class="k">利確時の利益</div><div class="v mono profit" id="tpPnl">–</div></div>
         <div class="cell"><div class="k">リスクリワード比</div><div class="v mono" id="rr">–</div></div>
         <div class="cell"><div class="k">必要証拠金（概算）</div><div class="v mono" id="margin">–</div></div>
+        <div class="cell"><div class="k">実効レバレッジ</div><div class="v mono" id="lev">–</div></div>
         <div class="cell"><div class="k">ロスカットまでの距離</div><div class="v mono" id="lcDist">–</div><div class="k" id="lcRate" style="margin-top:4px;margin-bottom:0;"></div></div>
         <div class="cell"><div class="k">建玉時の証拠金維持率</div><div class="v mono" id="mmr">–</div></div>
       </div>
@@ -288,7 +289,7 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
   let PIP = 0.01;      // pip価値（円）— 証券会社で切替
   let LOTSIZE = 10000; // 1ロットの通貨数 — 証券会社で切替
   let LC = 1;          // ロスカット水準（維持率, 小数）— 証券会社で切替
-  const LEV = 25;      // 個人口座USD/JPYは25倍固定
+  const MARGIN_RATE = 0.04; // 必要証拠金率4%（個人口座USD/JPYは最大25倍）
   let DIR = 'buy';     // 売買方向: 'buy'（ロング）/ 'sell'（ショート）
   const ids = ['bal','risk','sl','tp','rate'];
   const el = {};
@@ -304,7 +305,6 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
     const sl   = parseFloat(el.sl.value)   || 0;
     const tp   = parseFloat(el.tp.value)   || 0;
     const rate = parseFloat(el.rate.value) || 0;
-    const lev  = LEV;
     const lc   = LC;
     const lot  = LOTSIZE;
 
@@ -314,8 +314,10 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
     const slPnl   = -(units * sl * PIP);
     const tpPnl   = units * tp * PIP;
     const rr      = (sl>0) ? tp / sl : 0;
-    const margin  = (lev>0) ? units * rate / lev : 0;   // 必要証拠金（建玉時・固定近似）
+    const notional = units * rate;                       // ポジション想定元本（円）
+    const margin  = notional * MARGIN_RATE;              // 必要証拠金 = 想定元本の4%（建玉時・概算）
     const marginPct = (bal>0) ? margin / bal : 0;
+    const lev     = (bal>0) ? notional / bal : 0;         // 実効レバレッジ = 想定元本 ÷ 口座残高
     const mmr     = (margin>0) ? bal / margin : 0;        // 建玉時の証拠金維持率
     // ロスカットまでの距離: 維持率がlcに達するまでに口座が耐える含み損 = bal - lc*margin
     const buildable = margin>0 && margin <= bal;
@@ -333,6 +335,7 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
     out('tpPnl').textContent   = '+' + yen(tpPnl);
     out('rr').textContent      = rr ? '1 : ' + num(rr,2) : '–';
     out('margin').textContent  = yen(margin);
+    out('lev').textContent     = (units && lev>0) ? num(lev,2) + '倍' : '–';
     out('mmr').textContent     = mmr ? num(mmr*100,0) + '%' : '–';
 
     // 損切り・利確幅を銭・円の実距離＋選択方向の価格レベルで併記
