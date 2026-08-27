@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FX適正ロット計算機 — USD/JPY</title>
+<title>FX適正ロット計算機 — USD/JPY・GBP/USD・EUR/USD</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
@@ -192,7 +192,7 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
 <div class="wrap">
   <header>
       <div class="eyebrow">FX ロット計算ツール</div>
-      <h1>FX適正ロット計算機 <span class="mono" style="font-size:16px;color:var(--ink-3);">USD/JPY</span></h1>
+      <h1>FX適正ロット計算機 <span class="mono" id="pairTag" style="font-size:16px;color:var(--ink-3);">USD/JPY</span></h1>
       <p class="sub">許容損失（残高 × リスク割合）と損切り幅から、適正なロット（必要数量）を逆算します。 <a href="./docs/" style="color:var(--accent);text-underline-offset:3px">計算ロジックと前提 →</a></p>
   </header>
 
@@ -200,10 +200,21 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
     <!-- INPUTS -->
     <section class="panel">
       <h2>入力</h2>
-      <div class="brokers" id="brokers">
-        <button type="button" data-b="jfx">JFX</button>
-        <button type="button" data-b="min">みんなのFX</button>
-        <button type="button" data-b="oanda">OANDA証券</button>
+      <div class="field">
+        <label>通貨ペア</label>
+        <div class="brokers" id="pairs">
+          <button type="button" data-p="usdjpy">USD/JPY</button>
+          <button type="button" data-p="gbpusd">GBP/USD</button>
+          <button type="button" data-p="eurusd">EUR/USD</button>
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:8px;">
+        <label>証券会社</label>
+        <div class="brokers" id="brokers" style="margin-bottom:0;">
+          <button type="button" data-b="jfx">JFX</button>
+          <button type="button" data-b="min">みんなのFX</button>
+          <button type="button" data-b="oanda">OANDA証券</button>
+        </div>
       </div>
       <div class="bset">
         <div><span class="bk">pip価値</span><b class="bv" id="setPip">–</b></div>
@@ -238,8 +249,13 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
         <div class="hint" id="tpHint"></div>
       </div>
       <div class="field">
-        <label for="rate">現在レート／エントリー価格（USD/JPY）</label>
-        <div class="inputrow"><input id="rate" type="number" inputmode="decimal" step="0.01" value="157.00"><span class="unit">円</span></div>
+        <label for="rate" id="rateLabel">現在レート／エントリー価格（USD/JPY）</label>
+        <div class="inputrow"><input id="rate" type="number" inputmode="decimal" step="0.01" value="157.00"><span class="unit" id="rateUnit">円</span></div>
+      </div>
+      <div class="field" id="fxField" style="display:none;">
+        <label for="usdjpy">USD/JPY 換算レート（円建て損益への換算用）</label>
+        <div class="inputrow"><input id="usdjpy" type="number" inputmode="decimal" step="0.01" value="157.00"><span class="unit">円</span></div>
+        <div class="hint" id="fxHint"></div>
       </div>
     </section>
 
@@ -273,25 +289,37 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
   </div>
 
   <div class="notes">
-    <p><span class="tag">仕組み:</span> 必要数量 = (残高 × リスク%) ÷ (損切りpips × pip価値)。USD/JPY の pip価値は証券会社で異なり、JFXは1pip＝0.001円、みんなのFX・OANDAは1pip＝0.01円です。同じ「10pips」でも実距離が10倍変わるため、証券会社ボタンで自動切替し、損切り・利確幅は銭・円でも併記しています。</p>
+    <p><span class="tag">仕組み:</span> 必要数量 = (残高 × リスク%) ÷ (損切りpips × pip価値[円])。pip価値は通貨ペアと証券会社で異なります。USD/JPY はクオート通貨が円のため価格に依存せず、JFX＝0.001円・みんなのFX/OANDA＝0.01円。GBP/USD・EUR/USD はクオート通貨がドル（1pip＝0.0001ドル、JFXは0.00001ドル）で、円建て損益に直すには <b>USD/JPY 換算レート</b>が必要です。円換算pip価値 = pip[ドル] × USD/JPY。</p>
     <p><span class="tag">注意:</span> ポジションサイズは<b>損切り幅だけ</b>で決まります。利確幅はRR比の表示にのみ使用します。損切りが狭いほど必要数量が増え、必要証拠金が制約になります。</p>
     <p><span class="tag">ロスカット:</span> ロスカットまでの距離 = (残高 − ロスカット水準 × 必要証拠金) ÷ 1pip損益。これが損切り幅より短いと、損切りより先に強制決済され得ます。リスク割合を守って適正なロットにした単一ポジションなら通常この距離は数百pips以上あり、損切りが先に働きます。距離が短くなるのは証拠金の余裕が薄いときです。</p>
     <p><span class="tag">除外:</span> スプレッド・手数料・スワップは含みません。必要証拠金・ロスカットレートは建玉時レート基準の概算で、急変時は実際の執行値とずれます。</p>
   </div>
 
   <footer>
-    対応: USD/JPY 専用。個人口座のレバレッジ上限25倍（証拠金率4%）は金融庁規制／金融先物取引業協会に基づく。pip定義 — JFX: 1pip=0.001円（faq.jfx.co.jp）／みんなのFX: 1pip=0.01円（min-fx.jp）／OANDA証券: 1pip=0.01円（oanda.jp 用語集）。ロスカット水準はJFX・みんなのFX・OANDA東京TY3とも維持率100%。必要証拠金・ロスカットレートは建玉時レート基準の概算です。正確な値は各社の証拠金シミュレーションで確認してください。
+    対応: USD/JPY・GBP/USD・EUR/USD。個人口座のレバレッジ上限25倍（証拠金率4%）は金融庁規制／金融先物取引業協会に基づく。pip定義 — 対円 JFX: 0.001円／みんなのFX・OANDA: 0.01円。ドルストレート JFX: 0.00001ドル（faq.jfx.co.jp）／みんなのFX: 0.0001ドル（min-fx.jp）／OANDA証券: 0.0001ドル（oanda.jp 用語集）。ロスカット水準はJFX・みんなのFX・OANDA東京TY3とも維持率100%。GBP/USD・EUR/USD の円建て損益・証拠金は入力したUSD/JPY換算レート基準の概算で、換算レート自体の変動は反映しません。正確な値は各社の証拠金シミュレーションで確認してください。
   </footer>
 </div>
 
 <script>
 (function(){
-  let PIP = 0.01;      // pip価値（円）— 証券会社で切替
-  let LOTSIZE = 10000; // 1ロットの通貨数 — 証券会社で切替
-  let LC = 1;          // ロスカット水準（維持率, 小数）— 証券会社で切替
-  const MARGIN_RATE = 0.04; // 必要証拠金率4%（個人口座USD/JPYは最大25倍）
-  let DIR = 'buy';     // 売買方向: 'buy'（ロング）/ 'sell'（ショート）
-  const ids = ['bal','risk','sl','tp','rate'];
+  // 通貨ペア定義。pipStd＝標準の1pip（クオート通貨建て）、quote＝クオート通貨、
+  // dec＝価格の表示小数桁、rate＝既定エントリー価格。
+  const PAIRS = {
+    usdjpy: {label:'USD/JPY', quote:'JPY', pipStd:0.01,   dec:3, rate:'157.00'},
+    gbpusd: {label:'GBP/USD', quote:'USD', pipStd:0.0001, dec:5, rate:'1.2700'},
+    eurusd: {label:'EUR/USD', quote:'USD', pipStd:0.0001, dec:5, rate:'1.0800'}
+  };
+  // 証券会社定義。pipFactor＝標準pipに対する刻み係数（JFXは1/10のフラクショナルpip）。
+  const BROKERS = {
+    jfx:   {lot:1000,  lc:100, pipFactor:0.1, sl:100, tp:100, label:'JFX（マトリックストレーダー）：建値が細かく、対円は0.1銭・ドルストレートは小数点第5位刻み。スキャルピング向け。'},
+    min:   {lot:10000, lc:100, pipFactor:1,   sl:10,  tp:10,  label:'みんなのFX：1Lot＝10,000通貨だが最小0.1Lot＝1,000通貨から取引可能。'},
+    oanda: {lot:1000,  lc:100, pipFactor:1,   sl:10,  tp:10,  label:'OANDA証券（東京サーバーTY3）：発注は通貨数量ベースのためLotは目安。NYサーバー(fxTrade)はロスカット判定が別指標。'}
+  };
+  const MARGIN_RATE = 0.04; // 必要証拠金率4%（個人口座の主要通貨ペアは最大25倍）
+  let PAIRKEY = 'usdjpy';   // 選択中の通貨ペア
+  let BROKERKEY = 'min';    // 選択中の証券会社
+  let DIR = 'buy';          // 売買方向: 'buy'（ロング）/ 'sell'（ショート）
+  const ids = ['bal','risk','sl','tp','rate','usdjpy'];
   const el = {};
   ids.forEach(i => el[i] = document.getElementById(i));
   const out = id => document.getElementById(id);
@@ -299,32 +327,43 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
   const yen = n => (n<0?'-':'') + '¥' + Math.abs(Math.round(n)).toLocaleString('ja-JP');
   const num = (n,d=0) => Number(n).toLocaleString('ja-JP',{minimumFractionDigits:d,maximumFractionDigits:d});
 
+  // 現在のpip値（クオート通貨建て）= ペア標準pip × 会社の刻み係数
+  function pipQuote(){ return PAIRS[PAIRKEY].pipStd * BROKERS[BROKERKEY].pipFactor; }
+
   function calc(){
+    const pair = PAIRS[PAIRKEY];
+    const isJpy = pair.quote === 'JPY';
+    const PIP   = pipQuote();                 // クオート通貨建てpip（円 or ドル）
+    const lot   = BROKERS[BROKERKEY].lot;
+    const lc    = BROKERS[BROKERKEY].lc / 100;
+
     const bal  = parseFloat(el.bal.value)  || 0;
     const risk = (parseFloat(el.risk.value)|| 0) / 100;
     const sl   = parseFloat(el.sl.value)   || 0;
     const tp   = parseFloat(el.tp.value)   || 0;
     const rate = parseFloat(el.rate.value) || 0;
-    const lc   = LC;
-    const lot  = LOTSIZE;
+    // 円換算係数: 対円ペアは1、ドルストレートはUSD/JPY換算レート
+    const usdjpy = isJpy ? 1 : (parseFloat(el.usdjpy.value) || 0);
+    const toJPY  = usdjpy;
 
+    const pipJPY  = PIP * toJPY;              // 1通貨あたりpip価値（円）
     const riskAmt = bal * risk;
-    const units   = (sl>0) ? riskAmt / (sl * PIP) : 0;
-    const pipVal  = units * PIP;
-    const slPnl   = -(units * sl * PIP);
-    const tpPnl   = units * tp * PIP;
+    const units   = (sl>0 && pipJPY>0) ? riskAmt / (sl * pipJPY) : 0;
+    const pipVal  = units * pipJPY;
+    const slPnl   = -(units * sl * pipJPY);
+    const tpPnl   = units * tp * pipJPY;
     const rr      = (sl>0) ? tp / sl : 0;
-    const notional = units * rate;                       // ポジション想定元本（円）
-    const margin  = notional * MARGIN_RATE;              // 必要証拠金 = 想定元本の4%（建玉時・概算）
+    const notional = units * rate * toJPY;                // ポジション想定元本（円）
+    const margin  = notional * MARGIN_RATE;               // 必要証拠金 = 想定元本の4%（建玉時・概算）
     const marginPct = (bal>0) ? margin / bal : 0;
-    const lev     = (bal>0) ? notional / bal : 0;         // 実効レバレッジ = 想定元本 ÷ 口座残高
-    const mmr     = (margin>0) ? bal / margin : 0;        // 建玉時の証拠金維持率
+    const lev     = (bal>0) ? notional / bal : 0;          // 実効レバレッジ = 想定元本 ÷ 口座残高
+    const mmr     = (margin>0) ? bal / margin : 0;         // 建玉時の証拠金維持率
     // ロスカットまでの距離: 維持率がlcに達するまでに口座が耐える含み損 = bal - lc*margin
     const buildable = margin>0 && margin <= bal;
-    const absorb  = bal - lc * margin;                    // 耐えられる含み損（円）
+    const absorb  = bal - lc * margin;                     // 耐えられる含み損（円）
     const lcDist  = (buildable && pipVal>0) ? absorb / pipVal : null;  // pips
-    const dm      = (DIR==='buy') ? 1 : -1;               // 方向係数（買い=+1 / 売り=-1）
-    const lcRate  = (lcDist!=null) ? rate - dm * lcDist * PIP : null;  // 方向に応じたロスカットレート
+    const dm      = (DIR==='buy') ? 1 : -1;                // 方向係数（買い=+1 / 売り=-1）
+    const lcRate  = (lcDist!=null) ? rate - dm * lcDist * PIP : null;  // 方向に応じたロスカットレート（ペア建値）
 
     out('man').textContent   = units ? num(units/10000, 2) : '–';
     out('units').textContent = units ? num(Math.round(units)) : '–';
@@ -338,23 +377,27 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
     out('lev').textContent     = (units && lev>0) ? num(lev,2) + '倍' : '–';
     out('mmr').textContent     = mmr ? num(mmr*100,0) + '%' : '–';
 
-    // 損切り・利確幅を銭・円の実距離＋選択方向の価格レベルで併記
-    const slSen = sl * PIP / 0.01, tpSen = tp * PIP / 0.01;
-    const slDist = sl * PIP, tpDist = tp * PIP;
+    // 損切り・利確幅を実距離＋選択方向の価格レベルで併記（対円は銭・円、ドルストレートはpips・ドル）
+    const slDist = sl * PIP, tpDist = tp * PIP;            // クオート通貨建て値幅
     const slPrice = rate - dm * slDist;   // 買い: entry−距離 / 売り: entry＋距離
     const tpPrice = rate + dm * tpDist;   // 買い: entry＋距離 / 売り: entry−距離
-    const hint = (sen, dist, word, price) => {
-      let s = num(sen,1) + '銭（' + num(dist,3) + '円）';
-      if(rate>0) s += ' ｜ ' + word + ' ' + num(price,3) + '円';
+    const hint = (pips, dist, word, price) => {
+      let s = isJpy
+        ? num(pips * PIP / 0.01, 1) + '銭（' + num(dist,3) + '円）'
+        : num(pips, 1) + 'pips（' + num(dist, pair.dec) + 'ドル）';
+      if(rate>0) s += ' ｜ ' + word + ' ' + num(price, pair.dec) + (isJpy ? '円' : '');
       return s;
     };
-    out('slHint').textContent = sl ? hint(slSen, slDist, '損切り', slPrice) : '';
-    out('tpHint').textContent = tp ? hint(tpSen, tpDist, '利確', tpPrice) : '';
+    out('slHint').textContent = sl ? hint(sl, slDist, '損切り', slPrice) : '';
+    out('tpHint').textContent = tp ? hint(tp, tpDist, '利確', tpPrice) : '';
+    // ドルストレート時のみ: 円換算レートの補足（1万通貨あたりのpip価値）
+    out('fxHint').textContent = (!isJpy && pipJPY>0)
+      ? '1pip ≈ ' + yen(pipJPY*10000) + ' / 1万通貨（USD/JPY ' + num(usdjpy,2) + '換算）' : '';
 
     const dirWord = (DIR==='buy') ? '買い' : '売り';
     if(lcDist!=null){
       out('lcDist').textContent = num(lcDist,1) + ' pips';
-      out('lcRate').textContent = 'レート ' + num(lcRate,3) + ' でロスカット（' + dirWord + '）';
+      out('lcRate').textContent = 'レート ' + num(lcRate, pair.dec) + ' でロスカット（' + dirWord + '）';
       out('lcDist').className = 'v mono' + (lcDist < sl ? ' loss' : '');
     } else {
       out('lcDist').textContent = '–';
@@ -379,24 +422,45 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
     }
   }
 
-  const BROKERS = {
-    jfx:   {lot:1000,  lc:100, pip:0.001, sl:100, tp:100, label:'JFX（マトリックストレーダー）：建値が細かく1pip＝0.1銭刻み。スキャルピング向け。'},
-    min:   {lot:10000, lc:100, pip:0.01,  sl:10,  tp:10,  label:'みんなのFX：1Lot＝10,000通貨だが最小0.1Lot＝1,000通貨から取引可能。'},
-    oanda: {lot:1000,  lc:100, pip:0.01,  sl:10,  tp:10,  label:'OANDA証券（東京サーバーTY3）：発注は通貨数量ベースのためLotは目安。NYサーバー(fxTrade)はロスカット判定が別指標。'}
-  };
-  const brokerBtns = document.querySelectorAll('#brokers button');
-  const brokerNote = document.getElementById('brokerNote');
-  function setBroker(key){
-    const b = BROKERS[key]; if(!b) return;
-    PIP = b.pip; LOTSIZE = b.lot; LC = b.lc/100;
-    el.sl.value = b.sl; el.tp.value = b.tp;
-    out('setPip').textContent = num(b.pip,3) + '円（' + num(b.pip/0.01,1) + '銭）';
+  // 証券会社・通貨ペアの選択に応じてpip価値・ロット・ロスカット水準の表示を更新
+  function refreshBset(){
+    const pip = pipQuote(), b = BROKERS[BROKERKEY];
+    out('setPip').textContent = (PAIRS[PAIRKEY].quote==='JPY')
+      ? num(pip,3) + '円（' + num(pip/0.01,1) + '銭）'
+      : num(pip,5) + 'ドル';
     out('setLot').textContent = num(b.lot) + '通貨';
     out('setLc').textContent  = '維持率' + b.lc + '%';
-    brokerBtns.forEach(x => x.classList.toggle('active', x.dataset.b===key));
-    brokerNote.textContent = b.label;
+  }
+
+  const pairBtns = document.querySelectorAll('#pairs button');
+  const brokerBtns = document.querySelectorAll('#brokers button');
+  const brokerNote = document.getElementById('brokerNote');
+
+  function setPair(key){
+    const p = PAIRS[key]; if(!p) return;
+    PAIRKEY = key;
+    el.rate.value = p.rate;
+    el.rate.step  = (p.quote==='JPY') ? '0.01' : '0.0001';
+    out('rateLabel').textContent = '現在レート／エントリー価格（' + p.label + '）';
+    out('rateUnit').textContent  = (p.quote==='JPY') ? '円' : 'ドル';
+    out('fxField').style.display = (p.quote==='JPY') ? 'none' : 'block';
+    out('pairTag').textContent   = p.label;
+    pairBtns.forEach(x => x.classList.toggle('active', x.dataset.p===key));
+    refreshBset();
     calc();
   }
+
+  function setBroker(key){
+    const b = BROKERS[key]; if(!b) return;
+    BROKERKEY = key;
+    el.sl.value = b.sl; el.tp.value = b.tp;
+    brokerBtns.forEach(x => x.classList.toggle('active', x.dataset.b===key));
+    brokerNote.textContent = b.label;
+    refreshBset();
+    calc();
+  }
+
+  pairBtns.forEach(x => x.addEventListener('click', () => setPair(x.dataset.p)));
   brokerBtns.forEach(x => x.addEventListener('click', () => setBroker(x.dataset.b)));
 
   const dirBtns = document.querySelectorAll('#dir button');
@@ -408,6 +472,7 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
 
   ids.forEach(i => el[i].addEventListener('input', calc));
   setBroker('min');
+  setPair('usdjpy');
 })();
 </script>
 <script>/* market-desk: テーマ切替（自動→ライト→ダーク）。選択はサイト全体で共有 */

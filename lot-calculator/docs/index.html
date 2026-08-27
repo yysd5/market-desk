@@ -167,7 +167,7 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
     <h1>適正ロット計算機</h1>
     <p class="lede">
       1トレードの許容損失（口座残高 × リスク割合）と損切り幅から、発注すべき数量を逆算するツールです。
-      現状 USD/JPY 専用で、JFX・みんなのFX・OANDA証券の仕様差に対応しています。
+      USD/JPY・GBP/USD・EUR/USD に対応し、JFX・みんなのFX・OANDA証券の仕様差も切り替えられます。
       このページは計算式・前提・制約をまとめたものです。
     </p>
     <p class="toolcta"><a href="../">ツールを開く
@@ -194,15 +194,18 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
   <h2>概要</h2>
   <p>「1回の負けで口座の何%まで失ってよいか」を先に決め、その許容損失と損切り幅から逆算して発注すべき通貨数量を求める、という資金管理の基本計算をツール化したものです。損切り幅を pips で入力すると、必要数量・想定損益・必要証拠金・証拠金維持率・ロスカットまでの距離までまとめて表示します。</p>
   <p>計算式そのものは単純ですが、<b>pip の定義やロスカット水準が証券会社ごとに異なる</b>ため、同じ「10pips」でも実際の値幅・必要数量が変わります。このツールは会社ごとの仕様を切り替えられるようにして、その取り違えを防ぐことを主眼にしています。</p>
+  <p>また GBP/USD・EUR/USD のような<b>ドルストレート（クオート通貨が米ドル）</b>では、1pip の価値がドル建てになるため、円口座の損益に直すには <b>USD/JPY 換算レート</b>が必要です。対円ペア（USD/JPY）は pip 価値が円で固定される点と対照的で、このツールはドルストレート選択時に換算レート入力を出して、円建ての必要数量・証拠金・損益を求めます。</p>
 </section>
 
 <section id="features">
   <h2>できること</h2>
   <ul>
     <li><b>許容損失ベースの逆算</b>：口座残高 × リスク割合を許容損失とし、損切り幅から必要数量を算出</li>
+    <li><b>通貨ペア切替</b>：USD/JPY / GBP/USD / EUR/USD をワンタップで切替（既定レート・価格の刻み・pip価値の単位が自動でセット）</li>
+    <li><b>ドルストレートの円換算</b>：GBP/USD・EUR/USD 選択時は USD/JPY 換算レート入力が現れ、ドル建て pip 価値を円に直して必要数量・証拠金・損益を算出</li>
     <li><b>証券会社プリセット</b>：JFX / みんなのFX / OANDA証券 をワンタップで切替（pip価値・1ロット通貨数・ロスカット水準が自動でセット）</li>
-    <li><b>pip定義の会社差に対応</b>：JFX は USD/JPY で 1pip = 0.001円、みんなのFX・OANDA は 1pip = 0.01円。同じ値幅を各社の刻みで正しく扱う</li>
-    <li><b>銭・円の実距離と価格レベルを併記</b>：pips 入力の隣に「◯銭（◯円）」と、エントリー基準の損切り・利確価格を表示</li>
+    <li><b>pip定義の会社差に対応</b>：JFX はフラクショナルpip（標準の1/10刻み）。USD/JPY で 1pip = 0.001円、ドルストレートで 1pip = 0.00001ドル。みんなのFX・OANDA は標準（0.01円 / 0.0001ドル）</li>
+    <li><b>実距離と価格レベルを併記</b>：pips 入力の隣に、対円は「◯銭（◯円）」、ドルストレートは「◯pips（◯ドル）」と、エントリー基準の損切り・利確価格を表示</li>
     <li><b>買い / 売りの切替</b>：損切り価格・利確価格・ロスカット発動レートが方向に応じて反転</li>
     <li><b>証拠金とロスカットの可視化</b>：必要証拠金、建玉時の証拠金維持率、ロスカットまでの距離（pips）、ロスカット発動レートを表示。損切りより先にロスカットが来る場合は警告</li>
     <li><b>インストール不要・スマホ対応</b>：単一HTMLファイルなので、保存すればローカルでも動作します</li>
@@ -212,34 +215,42 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
 <section id="usage">
   <h2>使い方</h2>
   <ul>
+    <li>通貨ペア（USD/JPY / GBP/USD / EUR/USD）を選ぶ</li>
     <li>証券会社（JFX / みんなのFX / OANDA証券）を選ぶ</li>
     <li>売買方向（買い / 売り）を選ぶ</li>
     <li>口座残高・リスク割合・損切り幅・利確幅・現在レート（エントリー価格）を入力する</li>
+    <li>ドルストレート（GBP/USD・EUR/USD）では、あわせて USD/JPY 換算レートを入力する</li>
     <li>必要数量・必要証拠金・維持率・ロスカット距離などが即時に更新される</li>
   </ul>
-  <p>pip価値・1ロット通貨数・ロスカット水準・レバレッジは証券会社の選択で決まる値のため、表示のみ（編集不可）です。テーマは既定で端末の設定に追従し、画面上部のボタンで自動 / ライト / ダークを切り替えられます。</p>
+  <p>pip価値・1ロット通貨数・ロスカット水準・レバレッジは通貨ペアと証券会社の選択で決まる値のため、表示のみ（編集不可）です。テーマは既定で端末の設定に追従し、画面上部のボタンで自動 / ライト / ダークを切り替えられます。</p>
 </section>
 
 <section id="logic">
   <h2>計算ロジック</h2>
+  <p class="sub">pip価値の円換算（対円 / ドルストレート共通）</p>
+<pre>pip価値[円/通貨]  = pip[クオート通貨] × 円換算係数
+　対円（USD/JPY）  … pip = 0.01円（JFXは0.001円）、円換算係数 = 1
+　ドルストレート    … pip = 0.0001ドル（JFXは0.00001ドル）、円換算係数 = <b>USD/JPY</b></pre>
+
   <p class="sub">ポジションサイズ</p>
 <pre>許容損失額        = 口座残高 × リスク割合
 必要数量（通貨）  = 許容損失額 ÷ (損切り幅[pips] × pip価値[円])
-1pipあたり損益    = 必要数量 × pip価値
+1pipあたり損益    = 必要数量 × pip価値[円]
 損切り時の損益    = −許容損失額          （定義どおり損切り幅だけで決まる）
-利確時の利益      = 必要数量 × 利確幅[pips] × pip価値
+利確時の利益      = 必要数量 × 利確幅[pips] × pip価値[円]
 リスクリワード比  = 利確幅 ÷ 損切り幅</pre>
 
   <p class="sub">証拠金・レバレッジ・ロスカット（必要証拠金率 = 4%＝最大25倍）</p>
-<pre>必要証拠金            = 必要数量 × エントリー価格 × 4%   （= 想定元本 ÷ 25）
-実効レバレッジ        = 必要数量 × エントリー価格 ÷ 口座残高   [倍]
+<pre>想定元本[円]          = 必要数量 × エントリー価格 × 円換算係数
+必要証拠金            = 想定元本 × 4%   （= 想定元本 ÷ 25）
+実効レバレッジ        = 想定元本 ÷ 口座残高   [倍]
 証拠金維持率          = 口座残高 ÷ 必要証拠金
 ロスカットまでの距離  = (口座残高 − ロスカット水準 × 必要証拠金) ÷ 1pip損益   [pips]
-ロスカット発動レート  = エントリー価格 − 方向 × ロスカット距離 × pip価値
-損切り価格            = エントリー価格 − 方向 × 損切り幅 × pip価値
-利確価格              = エントリー価格 + 方向 × 利確幅   × pip価値</pre>
+ロスカット発動レート  = エントリー価格 − 方向 × ロスカット距離 × pip[クオート通貨]
+損切り価格            = エントリー価格 − 方向 × 損切り幅 × pip[クオート通貨]
+利確価格              = エントリー価格 + 方向 × 利確幅   × pip[クオート通貨]</pre>
 
-  <p>方向は買い = +1、売り = −1。USD/JPY はクオート通貨が円のため、pip価値は価格に依存しません。</p>
+  <p>方向は買い = +1、売り = −1。想定元本・pip価値の円換算には円換算係数（対円ペアは1、ドルストレートは USD/JPY レート）を掛けます。一方、ロスカット発動レート・損切り／利確価格は<b>そのペア自身の建値</b>で表すため、円換算係数ではなくクオート通貨建て pip（USD/JPY なら0.01円、GBP/USD なら0.0001ドル）を用います。USD/JPY はクオート通貨が円のため、pip価値は価格に依存しません。</p>
 
   <div class="note">
     <h3>この式から出てくる重要な性質</h3>
@@ -253,17 +264,17 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
   <h2>対応証券会社</h2>
   <div class="tbl">
   <table>
-    <thead><tr><th>証券会社</th><th>USD/JPY の 1pip</th><th>1ロットの通貨数</th><th>ロスカット水準</th></tr></thead>
+    <thead><tr><th>証券会社</th><th>USD/JPY の 1pip</th><th>GBP/USD・EUR/USD の 1pip</th><th>1ロットの通貨数</th><th>ロスカット水準</th></tr></thead>
     <tbody>
-      <tr><td>JFX（マトリックストレーダー）</td><td class="m">0.001円（0.1銭）</td><td class="m">1,000通貨</td><td>有効比率 100%未満</td></tr>
-      <tr><td>みんなのFX（トレイダーズ証券）</td><td class="m">0.01円（1銭）</td><td class="m">10,000通貨<br><span style="color:var(--ink-3)">最小 0.1Lot＝1,000通貨</span></td><td>証拠金維持率 100%以下</td></tr>
-      <tr><td>OANDA証券（東京サーバー TY3）</td><td class="m">0.01円（1銭）</td><td>通貨数量ベース<br><span style="color:var(--ink-3)">Lotは目安</span></td><td>証拠金維持率 100%以下</td></tr>
+      <tr><td>JFX（マトリックストレーダー）</td><td class="m">0.001円（0.1銭）</td><td class="m">0.00001ドル（第5位）</td><td class="m">1,000通貨</td><td>有効比率 100%未満</td></tr>
+      <tr><td>みんなのFX（トレイダーズ証券）</td><td class="m">0.01円（1銭）</td><td class="m">0.0001ドル（第4位）</td><td class="m">10,000通貨<br><span style="color:var(--ink-3)">最小 0.1Lot＝1,000通貨</span></td><td>証拠金維持率 100%以下</td></tr>
+      <tr><td>OANDA証券（東京サーバー TY3）</td><td class="m">0.01円（1銭）</td><td class="m">0.0001ドル（第4位）</td><td>通貨数量ベース<br><span style="color:var(--ink-3)">Lotは目安</span></td><td>証拠金維持率 100%以下</td></tr>
     </tbody>
   </table>
   </div>
   <ul>
-    <li>個人口座の USD/JPY レバレッジ上限は 25倍（必要証拠金率 4%）。金融庁のFX証拠金規制および一般社団法人金融先物取引業協会（<a href="https://www.ffaj.or.jp/" target="_blank" rel="noopener">ffaj.or.jp</a>）に基づく</li>
-    <li>pip定義・取引単位・ロスカット水準の出典：JFX（<a href="https://www.jfx.co.jp/" target="_blank" rel="noopener">jfx.co.jp</a> / faq.jfx.co.jp）、みんなのFX（<a href="https://min-fx.jp/" target="_blank" rel="noopener">min-fx.jp</a>）、OANDA証券（<a href="https://www.oanda.jp/" target="_blank" rel="noopener">oanda.jp</a>）</li>
+    <li>個人口座のレバレッジ上限は主要通貨ペアで 25倍（必要証拠金率 4%）。USD/JPY・GBP/USD・EUR/USD いずれも同じ。金融庁のFX証拠金規制および一般社団法人金融先物取引業協会（<a href="https://www.ffaj.or.jp/" target="_blank" rel="noopener">ffaj.or.jp</a>）に基づく</li>
+    <li>pip定義・取引単位・ロスカット水準の出典：JFX（<a href="https://www.jfx.co.jp/" target="_blank" rel="noopener">jfx.co.jp</a> / faq.jfx.co.jp、ドルストレートは 1pip＝0.00001ドル）、みんなのFX（<a href="https://min-fx.jp/" target="_blank" rel="noopener">min-fx.jp</a>、ドルストレートは 1pip＝0.0001ドル）、OANDA証券（<a href="https://www.oanda.jp/" target="_blank" rel="noopener">oanda.jp</a>、ドルストレートは 1pip＝0.0001ドル）</li>
     <li>OANDA証券のニューヨークサーバー（fxTrade）はロスカット判定に「証拠金清算割合」という別指標を用いるため、本ツールの証拠金維持率モデルは<b>東京サーバー（TY3）向け</b>です</li>
   </ul>
 </section>
@@ -271,7 +282,8 @@ if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t)
 <section id="limits">
   <h2>前提・制約</h2>
   <ul>
-    <li>対応通貨ペアは現状 <b>USD/JPY のみ</b>。ドルストレート（EUR/USD 等）やクロス円以外は別途レート換算が必要で未対応です</li>
+    <li>対応通貨ペアは <b>USD/JPY・GBP/USD・EUR/USD</b>。その他のクロス円・ドルストレートや、クロス円以外の通貨ペアは未対応です</li>
+    <li>ドルストレート（GBP/USD・EUR/USD）の円建て損益・証拠金は<b>入力した USD/JPY 換算レート基準の概算</b>です。換算レート自体が動けば実際の円換算額も変わりますが、その変動は反映しません（建玉時点の固定値として扱います）</li>
     <li>必要証拠金・ロスカット発動レートは<b>建玉時レート基準の概算</b>です。相場急変時は実際の執行値とずれます</li>
     <li><b>スプレッド・取引手数料・スワップポイントは含みません</b></li>
     <li>証拠金維持率モデルは、必要証拠金を建玉時レートで固定した近似です。各社は含み損益に応じて必要証拠金を再計算する場合があり、実際のロスカット価格は前後します</li>
