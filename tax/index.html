@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FX の税金 ｜ 国内FX・申告分離課税リファレンス</title>
+<meta name="description" content="国内FX（店頭FX・くりっく365）の税金を整理したリファレンス。税率20.315%の内訳、課税期間と1年のフロー、損益通算・繰越控除・経費・節税（ふるさと納税）まで。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+/* ========== market-desk 共通トークン ========== */
+:root{
+  --paper:#E7EAEE; --surface:#FFFFFF; --surface-2:#F2F4F7;
+  --ink:#0F1A24; --ink-2:#4C5A69; --ink-3:#7A8794;
+  --rule:#C8CFD8; --rule-soft:#DEE3EA;
+  --signal:#B33A30; --watch:#12776A; --ok:#15784C; --warn-c:#8A5300;
+  --tokyo:#C9871F; --london:#3272A8; --newyork:#6A57C8; --gold-c:#B08010;
+  /* 帯・スウォッチ用の固定色（濃色面に暗い文字を載せるためテーマ非依存） */
+  --bar-tk:#E8A24C; --bar-ld:#46B7C9; --bar-ny:#B07BE6;
+  --on-accent:#10151B;
+  --font-disp:var(--font-body);
+  --font-body:"Zen Kaku Gothic New",-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){ html:not([data-theme="light"]){
+    --paper:#0F141A; --surface:#171E26; --surface-2:#1E2731;
+    --ink:#DCE4EC; --ink-2:#93A2B2; --ink-3:#6C7B8B;
+    --rule:#2B3540; --rule-soft:#222B35;
+    --signal:#E0736A; --watch:#3EB5A0; --ok:#46C98C; --warn-c:#E6B652;
+    --tokyo:#E0A94A; --london:#5C9FD6; --newyork:#9385E8; --gold-c:#E8C05A;
+    color-scheme:dark;
+}}
+html[data-theme="dark"]{
+    --paper:#0F141A; --surface:#171E26; --surface-2:#1E2731;
+    --ink:#DCE4EC; --ink-2:#93A2B2; --ink-3:#6C7B8B;
+    --rule:#2B3540; --rule-soft:#222B35;
+    --signal:#E0736A; --watch:#3EB5A0; --ok:#46C98C; --warn-c:#E6B652;
+    --tokyo:#E0A94A; --london:#5C9FD6; --newyork:#9385E8; --gold-c:#E8C05A;
+    color-scheme:dark;
+}
+
+/* ========== サイトバー ========== */
+.site-bar{
+  display:flex;align-items:center;gap:.7rem;height:44px;
+  padding:0 clamp(14px,3vw,24px);
+  background:var(--surface);border-bottom:1px solid var(--rule);
+  font-family:var(--font-mono);font-size:11.5px;position:sticky;top:0;z-index:60;
+}
+.site-home{
+  display:inline-flex;align-items:center;gap:.45rem;flex:none;
+  color:var(--ink-2);text-decoration:none;letter-spacing:.06em;font-weight:500;
+}
+.site-home:hover{color:var(--ink)}
+.site-home svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.2;transition:transform .14s}
+.site-home:hover svg{transform:translateX(-2px)}
+.site-home .dot{color:var(--signal)}
+.site-here{
+  color:var(--ink-3);font-family:var(--font-body);font-size:11.5px;
+  padding-left:.7rem;border-left:1px solid var(--rule-soft);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;
+}
+.site-here a{color:var(--ink-2);text-decoration:none}
+.site-here a:hover{color:var(--ink);text-decoration:underline;text-underline-offset:3px}
+.site-theme{
+  margin-left:auto;flex:none;display:inline-flex;align-items:center;gap:.4rem;
+  border:1px solid var(--rule);background:var(--surface-2);color:var(--ink-2);
+  border-radius:100px;padding:.24rem .62rem;cursor:pointer;
+  font-family:var(--font-mono);font-size:11px;letter-spacing:.04em;
+  transition:border-color .12s,color .12s;
+}
+.site-theme:hover{border-color:var(--ink-3);color:var(--ink)}
+.site-theme .ic{display:inline-flex;width:13px;height:13px}
+.site-theme .ic svg{display:block;width:13px;height:13px}
+.site-bar :focus-visible{outline:2px solid var(--signal);outline-offset:3px;border-radius:3px}
+@media(max-width:520px){ .site-here{display:none} }
+@media print{ .site-bar{display:none} }
+
+  /* ページ固有エイリアス（共通トークンから導出） */
+  :root{
+    --panel:var(--surface); --panel2:var(--surface-2); --line:var(--rule);
+    --tx:var(--ink); --mut:var(--ink-2); --dim:var(--ink-3);
+    --ny:var(--newyork); --gold:var(--gold-c); --flow:var(--signal); --ind:var(--ok);
+    --disp:var(--font-disp); --body:var(--font-body); --mono:var(--font-mono);
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:
+      radial-gradient(1200px 500px at 15% -10%, rgba(232,162,76,.06), transparent 60%),
+      radial-gradient(1000px 500px at 85% 0%, rgba(176,123,230,.07), transparent 55%),
+      var(--paper);
+    color:var(--tx);font-family:var(--body);line-height:1.65;
+    font-size:15px;-webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:940px;margin:0 auto;padding:26px 18px 70px}
+  body>.site-bar+.wrap{padding-top:22px}
+  header{margin-bottom:26px}
+  .kicker{font-family:var(--mono);font-size:11.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);margin-bottom:12px}
+  h1{font-family:var(--disp);font-weight:700;font-size:clamp(26px,6.5vw,42px);line-height:1.08;letter-spacing:-.01em;margin:0 0 12px}
+  h1 .ac{color:var(--tokyo)}
+  .lede{color:var(--mut);max-width:62ch;margin:0}
+  .lede b{color:var(--tx);font-weight:600}
+  section{margin-top:40px}
+  .eyebrow{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--mut);margin-bottom:16px}
+  .eyebrow .no{color:var(--tokyo)}
+  .eyebrow::after{content:"";flex:1;height:1px;background:var(--line)}
+  h2{font-family:var(--disp);font-weight:700;font-size:22px;letter-spacing:-.01em;margin:0 0 14px}
+  h3{font-family:var(--disp);font-weight:700;font-size:16px;margin:22px 0 6px;color:var(--tx)}
+  p{margin:0 0 12px}
+  .muted{color:var(--mut)}
+  b.k{color:var(--tx);font-weight:600}
+
+  /* 大きな数値の提示（税率） */
+  .bignum{display:flex;flex-wrap:wrap;align-items:baseline;gap:14px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px 20px 18px}
+  .bignum .n{font-family:var(--mono);font-weight:600;font-size:clamp(34px,9vw,52px);line-height:1;color:var(--tokyo);letter-spacing:-.01em}
+  .bignum .cap{font-size:13px;color:var(--mut);max-width:44ch}
+  .bignum .cap b{color:var(--tx)}
+
+  /* 税率の内訳バー */
+  .breakdown{margin-top:16px}
+  .bd-bar{display:flex;height:34px;border-radius:8px;overflow:hidden;border:1px solid var(--line)}
+  .bd-seg{display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--on-accent);white-space:nowrap;overflow:hidden}
+  .bd-inc{background:linear-gradient(90deg,var(--bar-tk),#F0B56B)}
+  .bd-fk{background:linear-gradient(90deg,var(--bar-ld),#63C7D6)}
+  .bd-res{background:linear-gradient(90deg,var(--bar-ny),#C093EC)}
+  .bd-legend{display:flex;flex-wrap:wrap;gap:10px 18px;margin-top:10px;font-size:12.5px;color:var(--mut)}
+  .bd-legend span{display:inline-flex;align-items:center;gap:7px}
+  .bd-legend i{width:14px;height:10px;border-radius:3px;display:inline-block}
+  .i-inc{background:var(--bar-tk)}.i-fk{background:var(--bar-ld)}.i-res{background:var(--bar-ny)}
+
+  /* 年間フロー（横並びステップ） */
+  .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:6px}
+  .step{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 15px 15px}
+  .step .ph{font-family:var(--mono);font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:6px}
+  .step .dt{font-family:var(--mono);font-weight:600;font-size:15px;color:var(--tokyo);margin-bottom:6px}
+  .step .tt{font-weight:700;font-size:14px;margin-bottom:4px}
+  .step .ds{font-size:12.5px;color:var(--mut);line-height:1.55}
+  .step:not(:last-child)::after{content:"";position:absolute;top:50%;right:-8px;width:8px;height:8px;border-top:2px solid var(--line);border-right:2px solid var(--line);transform:translateY(-50%) rotate(45deg);z-index:1}
+  @media(max-width:760px){
+    .flow{grid-template-columns:1fr 1fr}
+    .step:not(:last-child)::after{display:none}
+  }
+  @media(max-width:440px){ .flow{grid-template-columns:1fr} }
+
+  /* 会社員フローチャート（縦・判定分岐） */
+  .flowchart{margin:6px 0 4px;display:flex;flex-direction:column}
+  .fc-box{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:13px 15px;font-size:13.5px}
+  .fc-start{align-self:center;text-align:center;color:var(--mut);background:var(--panel2);max-width:560px}
+  .fc-start b{color:var(--tx)}
+  .fc-q{border-left:3px solid var(--tokyo)}
+  .fc-q .qno{font-family:var(--mono);font-size:10.5px;font-weight:600;color:var(--tokyo);margin-right:8px}
+  .fc-q .qt{font-weight:600;color:var(--tx)}
+  .fc-conn{width:2px;height:16px;background:var(--line);margin:0 auto}
+  .fc-arm{display:flex;align-items:flex-start;gap:10px;margin:9px 0 0 14px}
+  .fc-tag{font-family:var(--mono);font-size:10.5px;font-weight:600;letter-spacing:.04em;padding:3px 9px;border-radius:999px;white-space:nowrap;flex-shrink:0;border:1px solid;margin-top:2px}
+  .fc-tag.yes{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,transparent);background:color-mix(in srgb,var(--ok) 10%,transparent)}
+  .fc-tag.no{color:var(--mut);border-color:var(--line);background:var(--panel2)}
+  .fc-out{flex:1;border-radius:10px;padding:11px 13px;font-size:13px;border:1px solid;color:var(--mut)}
+  .fc-out b{color:var(--tx)}
+  .fc-out .h{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px}
+  .fc-out.tax{border-color:color-mix(in srgb,var(--ok) 40%,transparent);background:color-mix(in srgb,var(--ok) 7%,transparent)}
+  .fc-out.tax .h{color:var(--ok)}
+  .fc-out.res{border-color:color-mix(in srgb,var(--london) 40%,transparent);background:color-mix(in srgb,var(--london) 8%,transparent)}
+  .fc-out.res .h{color:var(--london)}
+  .fc-out.opt{border-color:var(--line);background:var(--panel2)}
+  .fc-out.opt .h{color:var(--dim)}
+  .fc-else{display:flex;align-items:center;gap:8px;margin:10px 0 0 14px;font-family:var(--mono);font-size:11px;color:var(--mut)}
+  .fc-else .ar{color:var(--tokyo);font-weight:700}
+
+  /* table */
+  .tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+  table{border-collapse:collapse;width:100%;min-width:520px;font-size:13.5px}
+  thead th{font-family:var(--mono);font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);text-align:left;padding:13px 14px;border-bottom:1px solid var(--line);white-space:nowrap;position:sticky;top:0;background:var(--panel2)}
+  tbody td{padding:12px 14px;border-bottom:1px solid var(--rule-soft);vertical-align:top}
+  tbody tr:last-child td{border-bottom:0}
+  .ev{font-weight:600;color:var(--tx)}
+  td.note{color:var(--mut);font-size:12.5px;min-width:170px}
+  tr.sub td{background:var(--panel2);font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);padding:9px 14px}
+  td .yes{color:var(--ok);font-weight:600}
+  td .no{color:var(--flow);font-weight:600}
+  tr.zone-ok td.ev{border-left:3px solid var(--ok);padding-left:11px}
+  tr.zone-ng td.ev{border-left:3px solid var(--flow);padding-left:11px}
+
+  /* cards */
+  .cards{display:grid;gap:14px}
+  .cards.two{grid-template-columns:1fr 1fr}
+  @media(max-width:640px){ .cards.two{grid-template-columns:1fr} }
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 16px}
+  .card .ctop{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:8px}
+  .card h3{margin:0;font-size:16.5px}
+  .tag{font-family:var(--mono);font-size:10px;letter-spacing:.05em;padding:4px 9px;border-radius:999px;white-space:nowrap;flex-shrink:0;border:1px solid}
+  .t-ok{color:var(--ok);border-color:color-mix(in srgb,var(--ok) 45%,transparent);background:color-mix(in srgb,var(--ok) 10%,transparent)}
+  .t-mid{color:var(--gold);border-color:rgba(242,201,76,.35);background:rgba(242,201,76,.07)}
+  .card .row{margin:8px 0 0}
+  .card .row .kk{font-family:var(--mono);font-size:10.5px;letter-spacing:.05em;text-transform:uppercase;color:var(--dim);display:block;margin-bottom:2px}
+  .card .row .v{color:var(--tx);font-size:13.5px}
+  .card .row .v.warn{color:var(--mut)}
+
+  .callout{border:1px solid var(--line);border-left:3px solid var(--gold);background:var(--panel);border-radius:0 12px 12px 0;padding:16px 18px;margin:18px 0}
+  .callout.warn{border-left-color:var(--flow)}
+  .callout .t{font-family:var(--disp);font-weight:700;margin-bottom:6px;color:var(--gold)}
+  .callout.warn .t{color:var(--flow)}
+  ul.clean{padding-left:18px;margin:0 0 12px}
+  ul.clean li{margin-bottom:6px}
+  .src{font-size:12.5px;color:var(--mut)}
+  .src a{color:var(--london);text-decoration:none;word-break:break-all}
+  .src a:hover{text-decoration:underline}
+  .src li{margin-bottom:9px}
+  .foot{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);font-size:11.5px;color:var(--dim);font-family:var(--mono)}
+  @media(max-width:560px){
+    .wrap{padding:22px 14px 60px}
+  }
+  @media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<script>/* 描画前にテーマを適用（ちらつき防止） */
+(function(){try{var t=localStorage.getItem('md-theme');
+if(t==='light'||t==='dark')document.documentElement.setAttribute('data-theme',t);}catch(e){}})();
+</script>
+</head>
+<body>
+<nav class="site-bar" aria-label="サイト"><a class="site-home" href="../"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H6M11 6l-6 6 6 6"/></svg>market<span class="dot">·</span>desk</a><span class="site-here">FX の税金</span><button class="site-theme" id="mdTheme" type="button" title="テーマ切替：自動 / ライト / ダーク" aria-label="テーマ切替"><span class="ic" id="mdThemeIc"></span><span id="mdThemeLbl">自動</span></button></nav>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">FX Taxation ／ Japan Reference</div>
+    <h1>FX の<span class="ac">税金</span></h1>
+    <p class="lede"><b>国内FX業者（店頭FX・くりっく365）</b>で個人が得た利益にかかる税金を整理したリファレンス。税率と種類、<b>1月〜12月の課税期間と1年のフロー</b>、損益通算・繰越控除・経費、そして節税（ふるさと納税ほか）までを一次ソース付きでまとめています。会社員の申告要否は§07にフローチャートを用意。海外FX業者やプロップファームは課税の仕組みが異なるため、同じく§07に注意点として分けました。</p>
+    <div class="callout warn" style="margin-top:20px">
+      <div class="t">はじめに（免責）</div>
+      <p class="muted" style="margin:0">個人用にまとめた資料で、税務アドバイスではありません。税制は改正され、個々の事情で扱いも変わります。実際の申告前には各項の一次ソース（国税庁ほか）と、必要に応じて税務署・税理士で必ず確認してください。前提は<b class="k">日本の居住者・個人・国内FX業者</b>です。</p>
+    </div>
+  </header>
+
+  <!-- ============ 01 基本：種類と税率 ============ -->
+  <section>
+    <div class="eyebrow"><span class="no">01</span> 税金の種類と税率</div>
+    <p class="muted">国内FXの利益は<b class="k">「先物取引に係る雑所得等」</b>として、給与などとは分けて計算する<b class="k">申告分離課税</b>になります。店頭FXも取引所FX（くりっく365）も、2012年以降はこの区分に一本化されています。税率は利益の大小にかかわらず<b class="k">一律20.315%</b>です（累進ではありません）。</p>
+
+    <div class="bignum">
+      <span class="n">20.315<span style="font-size:.5em">%</span></span>
+      <span class="cap"><b>所得税15%</b>＋<b>復興特別所得税0.315%</b>＋<b>住民税5%</b>。復興特別所得税は所得税額の2.1%（＝15%×2.1%＝0.315%）で、2037年（令和19年）まで。</span>
+    </div>
+
+    <div class="breakdown">
+      <div class="bd-bar">
+        <div class="bd-seg bd-inc" style="flex:15">所得税 15%</div>
+        <div class="bd-seg bd-fk" style="flex:0.315;min-width:56px">復興 0.315%</div>
+        <div class="bd-seg bd-res" style="flex:5">住民税 5%</div>
+      </div>
+      <div class="bd-legend">
+        <span><i class="i-inc"></i>所得税 15%（国税・申告分離）</span>
+        <span><i class="i-fk"></i>復興特別所得税 0.315%</span>
+        <span><i class="i-res"></i>住民税 5%（地方税）</span>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="t">2027年（令和9年）からの内訳変更</div>
+      <p class="muted" style="margin:0">令和8年度税制改正で<b class="k">防衛特別所得税</b>が新設されます。2027年以降は付加税の内訳が「復興特別所得税0.165%＋防衛特別所得税0.15%」に組み替わりますが、<b class="k">合計の税率20.315%は当面据え置き</b>です（復興特別所得税は税率を下げる代わりに課税期間が2047年まで延長）。</p>
+    </div>
+
+    <h3>いつ課税されるか（決済ベース）</h3>
+    <p class="muted">課税されるのは<b class="k">その年に決済して確定した損益</b>です。ポジションを持ち越しているだけの<b class="k">含み益は課税対象外</b>。スワップポイントも課税対象ですが、受取・決済のどちらで認識するか（＝いつの年の損益に入るか）は業者によって扱いが異なるため、年をまたぐときは自分の口座の年間損益報告書で確認してください。</p>
+  </section>
+
+  <!-- ============ 02 課税期間と1年のフロー ============ -->
+  <section>
+    <div class="eyebrow"><span class="no">02</span> 課税期間と1年のフロー</div>
+    <p class="muted">課税期間は<b class="k">暦年（1月1日〜12月31日）</b>。その1年の損益を、翌年の確定申告でまとめて申告・納税します。</p>
+
+    <div class="flow">
+      <div class="step">
+        <div class="ph">課税期間</div>
+        <div class="dt">1/1 – 12/31</div>
+        <div class="tt">その年の損益を確定</div>
+        <div class="ds">1年間に決済した損益（スワップ含む）を合計。年末までの決済分がその年に入る。含み益は含めない。</div>
+      </div>
+      <div class="step">
+        <div class="ph">年末〜年始</div>
+        <div class="dt">12月末</div>
+        <div class="tt">年間損益報告書</div>
+        <div class="ds">業者が発行する年間取引報告書で損益・経費を集計。損失の年でも繰越のため申告を検討（→§04）。</div>
+      </div>
+      <div class="step">
+        <div class="ph">申告・納税</div>
+        <div class="dt">2/16 – 3/15</div>
+        <div class="tt">確定申告</div>
+        <div class="ds">翌年のこの期間に申告。所得税を納付。ふるさと納税の寄附金控除もここで申告（→§06）。</div>
+      </div>
+      <div class="step">
+        <div class="ph">住民税</div>
+        <div class="dt">6月〜</div>
+        <div class="tt">住民税の課税</div>
+        <div class="ds">確定申告の内容が自治体に連携され、住民税5%分が6月以降に課される（普通徴収なら年4回など）。</div>
+      </div>
+    </div>
+    <p class="muted" style="margin-top:14px;font-size:13px">※ 申告期限（3/15）が土日にあたる年は翌開庁日にずれます。損失の年に確定申告しておくと、翌年以降の繰越控除（→§04）の起点になります。所得税の確定申告をしない場合は住民税が自動連携されないため、別途<b class="k">市区町村への住民税申告</b>が要ることがあります（→§07 会社員フロー）。</p>
+  </section>
+
+  <!-- ============ 03 損益通算 ============ -->
+  <section>
+    <div class="eyebrow"><span class="no">03</span> 損益通算 ― 何と相殺できるか</div>
+    <p class="muted">損益通算とは、利益と損失を<b class="k">相殺して課税対象を圧縮</b>すること。国内FXの損益は<b class="k">「先物取引に係る雑所得等」という同じ区分の中でだけ</b>通算できます。区分が違うもの（株式や給与）とは通算できないのがポイントです。</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>相手</th><th>通算</th><th>補足</th></tr></thead>
+        <tbody>
+          <tr class="sub"><td colspan="3">通算できる（＝同じ「先物取引に係る雑所得等」）</td></tr>
+          <tr class="zone-ok"><td class="ev">他の国内FX・くりっく365</td><td><span class="yes">できる</span></td><td class="note">業者をまたいでも同じ区分。A社の利益とB社の損失を相殺できる</td></tr>
+          <tr class="zone-ok"><td class="ev">CFD（店頭・取引所）</td><td><span class="yes">できる</span></td><td class="note">株価指数・商品・個別株CFD等。申告分離の対象商品であること</td></tr>
+          <tr class="zone-ok"><td class="ev">商品先物・日経225先物／オプション等</td><td><span class="yes">できる</span></td><td class="note">取引所の先物・オプションでこの特例の対象になるもの</td></tr>
+          <tr class="sub"><td colspan="3">通算できない（＝別区分）</td></tr>
+          <tr class="zone-ng"><td class="ev">給与・事業などの総合課税所得</td><td><span class="no">できない</span></td><td class="note">申告分離のため、給与や他の雑所得（総合）とは相殺不可</td></tr>
+          <tr class="zone-ng"><td class="ev">上場株式・投資信託の譲渡損益・配当</td><td><span class="no">できない</span></td><td class="note">これも申告分離だが「別枠」。FX損失と株の利益は相殺できない</td></tr>
+          <tr class="zone-ng"><td class="ev">海外FX業者の損益</td><td><span class="no">できない</span></td><td class="note">海外FXは総合課税の雑所得（→§07）。国内FXとは通算不可</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="muted" style="margin-top:10px;font-size:13px">※ 「先物取引に係る雑所得等」に含まれる具体的な取引の範囲は国税庁 No.1521で確認を（→§08）。</p>
+  </section>
+
+  <!-- ============ 04 繰越控除 ============ -->
+  <section>
+    <div class="eyebrow"><span class="no">04</span> 繰越控除 ― 損失を3年持ち越す</div>
+    <p class="muted">その年に控除しきれなかった損失は、確定申告することで<b class="k">翌年以降3年間</b>にわたって繰り越し、将来の「先物取引に係る雑所得等」の利益から差し引けます。大きく負けた年ほど、翌年以降のために申告しておく価値があります。</p>
+
+    <div class="callout warn">
+      <div class="t">要件：連続して確定申告し続けること</div>
+      <p class="muted" style="margin:0">繰越控除には、<b class="k">①損失が出た年に確定申告する</b>ことに加え、<b class="k">②その後の年も連続して確定申告書（付表つき）を提出し続ける</b>ことが必要です。途中の年に取引が無く損益ゼロでも、申告を1年でも飛ばすとそこで繰越が切れます。控除を受ける年にも付表・明細書を添付します。</p>
+    </div>
+
+    <p class="muted">たとえば2026年に −60万円の損失を出し、確定申告して繰り越した場合:</p>
+    <ul class="clean muted">
+      <li><b class="k">2027年に +20万円</b> → 繰越損失と相殺し課税対象0円（残り繰越 −40万円）。この年も申告が必要。</li>
+      <li><b class="k">2028年に +50万円</b> → 残り −40万円と相殺し課税対象10万円。</li>
+      <li>繰り越せるのは損失発生年の<b class="k">翌年から3年以内</b>。使い切れなかった分は期限切れで消滅。</li>
+    </ul>
+  </section>
+
+  <!-- ============ 05 経費 ============ -->
+  <section>
+    <div class="eyebrow"><span class="no">05</span> 経費 ― 利益から差し引けるもの</div>
+    <p class="muted">経費計上は法人だけの話ではなく、<b class="k">会社員を含む個人でもできます</b>。そもそもFXの「所得」は<b class="k">利益（年間の確定損益）− 必要経費</b>で計算し、この所得が課税や申告要否（→§07）のベースになります。経費にできるのは、取引のために直接かかった費用で、<b class="k">取引との関連性を説明でき、領収書等で裏づけられる</b>もの。私用と兼用のもの（PC・通信費など）は<b class="k">取引に使った割合で按分</b>します。最終的に認められる範囲は税務署の判断になります。</p>
+    <div class="cards two">
+      <div class="card">
+        <div class="ctop"><h3>計上しやすい例</h3><span class="tag t-ok">関連性が明確</span></div>
+        <ul class="clean muted" style="margin:0">
+          <li>取引手数料・入出金手数料</li>
+          <li>FX関連の書籍・新聞・雑誌・有料情報サービス</li>
+          <li>セミナー参加費・その交通費</li>
+          <li>取引専用のVPS・分析ツールの利用料</li>
+          <li>取引専用に使う筆記用具・文具</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="ctop"><h3>按分・要注意の例</h3><span class="tag t-mid">割合・説明が必要</span></div>
+        <ul class="clean muted" style="margin:0">
+          <li>PC・モニタ・周辺機器（取引に使う割合で按分）</li>
+          <li>インターネット・スマホの通信費（按分）</li>
+          <li>電気代など（在宅取引で按分する場合）</li>
+          <li>私用兼用のものは合理的な按分根拠を残す</li>
+          <li>関連性の薄い支出は否認されうる</li>
+        </ul>
+      </div>
+    </div>
+    <p class="muted" style="margin-top:12px;font-size:13px">※ 領収書・明細は保存が必要。按分の根拠（使用時間・面積など）をメモしておくと説明しやすい。</p>
+  </section>
+
+  <!-- ============ 06 節税 ============ -->
+  <section>
+    <div class="eyebrow"><span class="no">06</span> 節税の手立て</div>
+    <p class="muted">FXは税率が一律で、株のNISAのような非課税枠もありません。使える手立ては限られますが、組み合わせれば効きます。まずは<b class="k">§03 損益通算・§04 繰越控除・§05 経費</b>で課税対象を正しく圧縮するのが土台。その上で以下が加わります。</p>
+    <div class="cards two">
+      <div class="card">
+        <div class="ctop"><h3>ふるさと納税</h3><span class="tag t-ok">王道</span></div>
+        <div class="row"><span class="kk">仕組み</span><span class="v">寄附金控除で所得税・住民税が軽くなり、返礼品も受け取れる。FXの利益で所得・住民税が増えると<b>控除上限額も上がる</b>ため、利益が出た年ほど枠を活かしやすい。</span></div>
+        <div class="row"><span class="kk">注意</span><span class="v warn">FXで確定申告するなら<b>ワンストップ特例は使えない</b>。確定申告の寄附金控除として申告する。上限は年収・家族構成・FX利益込みの所得で変わるので、シミュレーションで確認を。</span></div>
+      </div>
+      <div class="card">
+        <div class="ctop"><h3>損出し／利益確定のタイミング調整</h3><span class="tag t-mid">計画的に</span></div>
+        <div class="row"><span class="kk">仕組み</span><span class="v">課税は暦年区切り・決済ベース。含み損を年内に実現（損出し）して同年の利益と相殺したり、利益確定を翌年に回して年をならすなど、<b>年またぎのタイミングを調整</b>できる。</span></div>
+        <div class="row"><span class="kk">注意</span><span class="v warn">税のためだけに相場観に反した決済をするのは本末転倒。あくまで納税額と手取り・相場観のバランスで。</span></div>
+      </div>
+      <div class="card">
+        <div class="ctop"><h3>iDeCo・小規模企業共済</h3><span class="tag t-mid">所得控除</span></div>
+        <div class="row"><span class="kk">仕組み</span><span class="v">掛金が<b>所得控除</b>になり、総合課税側の税負担が下がる。FX利益そのものに直接効くわけではないが、世帯全体の税・老後資金づくりとして有効。</span></div>
+        <div class="row"><span class="kk">注意</span><span class="v warn">申告分離のFX税額を直接減らすものではない。加入資格・拠出限度・原則60歳まで引き出せない等の制約に注意。</span></div>
+      </div>
+      <div class="card">
+        <div class="ctop"><h3>法人化</h3><span class="tag t-mid">規模が大きい時</span></div>
+        <div class="row"><span class="kk">仕組み</span><span class="v">利益が非常に大きい場合、法人化で経費範囲の拡大・繰越期間の長期化（法人は最長10年）・所得分散などの選択肢が出る。</span></div>
+        <div class="row"><span class="kk">注意</span><span class="v warn">設立・維持コストや会計負担が増え、少額では割に合わない。実行は税理士と要相談。</span></div>
+      </div>
+    </div>
+    <div class="callout">
+      <div class="t">ワンストップ特例の落とし穴</div>
+      <p class="muted" style="margin:0">「ふるさと納税はワンストップ特例で済ませた」つもりでも、<b class="k">FXの利益で確定申告をするとワンストップ特例は無効</b>になります。確定申告のなかで改めて<b class="k">全額を寄附金控除として申告し直す</b>必要があるので、申告漏れに注意。</p>
+    </div>
+  </section>
+
+  <!-- ============ 07 確定申告の要否・注意点 ============ -->
+  <section>
+    <div class="eyebrow"><span class="no">07</span> 申告が必要な人・注意点</div>
+
+    <h3>会社員（給与所得者）― 申告要否フロー</h3>
+    <p class="muted">給与1か所・年末調整済みの会社員が、FXの利益に応じて何をすべきかの早見フローです。<b class="k">20万円の基準は経費を引いた後の「所得」で判定</b>し（→§05）、<b class="k">所得税の確定申告をすれば住民税は自動で連携</b>されます。自分で住民税を申告するのは「確定申告をしない × 利益あり」のときだけ、と読んでください。</p>
+
+    <div class="flowchart">
+      <div class="fc-box fc-start">まず <b>FXの所得 ＝ 年間の確定損益 − 必要経費</b> を計算<br>（前提：給与は1か所・年末調整済み）</div>
+      <div class="fc-conn"></div>
+
+      <div class="fc-box fc-q"><span class="qno">Q1</span><span class="qt">経費を引いた後の所得が 20万円を超える？</span>
+        <div class="fc-arm"><span class="fc-tag yes">はい</span><div class="fc-out tax"><span class="h">所得税の確定申告</span>税務署へ確定申告し、FXの所得を申告する。<b>これで住民税も自動で連携され、住民税の手続きは別途不要</b>。</div></div>
+      </div>
+      <div class="fc-else"><span class="ar">▼</span> いいえ（20万円以下）→ Q2 へ</div>
+      <div class="fc-conn"></div>
+
+      <div class="fc-box fc-q"><span class="qno">Q2</span><span class="qt">医療費控除・ふるさと納税・住宅ローン控除（初年度）など、別の理由で確定申告をする？</span>
+        <div class="fc-arm"><span class="fc-tag yes">はい</span><div class="fc-out tax"><span class="h">所得税の確定申告</span>その確定申告に<b>20万円以下のFX所得も必ず含める</b>（20万円の特例は使えない）。住民税も連携される。</div></div>
+      </div>
+      <div class="fc-else"><span class="ar">▼</span> いいえ → Q3 へ</div>
+      <div class="fc-conn"></div>
+
+      <div class="fc-box fc-q"><span class="qno">Q3</span><span class="qt">FXの所得はプラス（利益が出た）？</span>
+        <div class="fc-arm"><span class="fc-tag yes">はい</span><div class="fc-out res"><span class="h">住民税申告（市区町村へ）</span>所得税の確定申告はしないが、<b>市区町村へ住民税の申告を自分で行う</b>。税務署の確定申告とは別の手続き・別の窓口。</div></div>
+        <div class="fc-arm"><span class="fc-tag no">いいえ</span><div class="fc-out opt"><span class="h">申告義務なし（任意）</span>損失・ゼロなら申告義務はない。ただし<b>損失を翌年以降へ繰り越したいなら確定申告を</b>（→§04）。</div></div>
+      </div>
+    </div>
+
+    <p class="muted" style="margin-top:14px;font-size:13px">※ 所得税の申告を省く場合でも、経費の領収書・計算根拠は「20万円以下だった」裏づけとして保管を。「20万円以下は申告不要」はあくまで<b class="k">所得税だけ</b>の特例で、住民税には無い点に注意（Q3）。</p>
+
+    <h3>専業・被扶養者（扶養に入っている人など）</h3>
+    <p class="muted">給与がない専業トレーダーや被扶養者は、基礎控除（合計所得48万円）などを超える所得があれば確定申告が必要になり得ます。とくに扶養に入っている場合、<b class="k">FXの利益（合計所得）が一定額を超えると扶養から外れる</b>（配偶者控除・扶養控除や社会保険の判定に影響する）ため、利益が伸びた年は境界に注意してください。</p>
+
+    <div class="callout warn">
+      <div class="t">海外FX業者は税金が別物</div>
+      <p class="muted" style="margin:0">海外FX業者の損益は申告分離ではなく<b class="k">総合課税の雑所得</b>で、給与などと合算して<b class="k">累進課税（所得税＋住民税で最大約55%）</b>。さらに<b class="k">損益通算（§03）も繰越控除（§04）も対象外</b>で、国内FXの損益とも通算できません。同じ「FX」でも税負担がまったく違うため、国内・海外は必ず分けて扱ってください。</p>
+    </div>
+
+    <h3>プロップファーム（Prop Firm）の利益</h3>
+    <p class="muted">審査・チャレンジに合格して資金を借り、成績に応じた<b class="k">利益配分（ペイアウト）</b>を受け取るプロップファームの収入は、<b class="k">自分の資金・自分名義のポジションで市場取引した利益ではない</b>点が国内FXと決定的に違います。実態は「成績に応じた報酬の受け取り」に近く、この場合は「先物取引に係る雑所得等」ではなく<b class="k">総合課税の雑所得</b>として扱われる可能性が高いと考えられます（＝海外FXと同様に累進・通算不可の側）。</p>
+    <div class="callout warn">
+      <div class="t">扱いが確立しておらず、要確認</div>
+      <p class="muted" style="margin:0">総合課税の雑所得なら、給与などと合算して<b class="k">累進課税（最大約55%）</b>、<b class="k">損益通算（§03）・繰越控除（§04）の対象外</b>で、国内FXの損益とも通算できません。ただし<b class="k">プロップファーム収入には国税庁の専用見解がなく</b>、契約形態（デモ／実口座・業務委託か否か）や規模によって結論が変わり得ます（継続・大規模なら事業所得の余地、海外拠点なら送金・為替換算の論点も）。金額が大きい・継続的なら、申告方法は税理士に確認してください。なお<b class="k">チャレンジ参加費などの費用は、対応する収入がある範囲で雑所得の必要経費</b>になり得ます。</p>
+    </div>
+
+    <ul class="clean muted">
+      <li><b class="k">スワップの計上時期</b>：受取時か決済時か、業者で扱いが分かれる。年またぎの損益に影響するので年間報告書で確認。</li>
+      <li><b class="k">住民税の申告漏れ</b>：所得税の確定申告をしない場合に限り、<b class="k">市区町村へ住民税申告</b>を（確定申告すれば連携されるので別途不要。→会社員フロー Q3）。</li>
+      <li><b class="k">申告に必要な書類</b>：業者の年間損益報告書、経費の領収書、繰越があれば前年までの明細・付表。</li>
+    </ul>
+  </section>
+
+  <!-- ============ 08 出典 ============ -->
+  <section>
+    <div class="eyebrow"><span class="no">08</span> 出典（一次情報中心）</div>
+    <ul class="src">
+      <li>国税庁 タックスアンサー No.1521《先物取引に係る雑所得等の課税の特例》（申告分離課税・税率・対象取引・損益通算の範囲）<br><a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1521.htm">nta.go.jp/…/taxanswer/shotoku/1521.htm</a></li>
+      <li>国税庁 タックスアンサー No.1522／No.1523《先物取引の差金等決済に係る損失の繰越控除》（3年繰越・連続申告の要件）<br><a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1523.htm">nta.go.jp/…/taxanswer/shotoku/1523.htm</a></li>
+      <li>国税庁 タックスアンサー No.1900《給与所得者で確定申告が必要な人》（20万円基準）<br><a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1900.htm">nta.go.jp/…/taxanswer/shotoku/1900.htm</a></li>
+      <li>国税庁 タックスアンサー No.1500《雑所得》（総合課税の雑所得の一般的な扱い。海外FX・プロップファーム収入の区分を考える際の基礎）<br><a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/1500.htm">nta.go.jp/…/taxanswer/shotoku/1500.htm</a></li>
+      <li>国税庁 タックスアンサー No.2020《確定申告》（申告期間 2/16〜3/15）<br><a href="https://www.nta.go.jp/taxes/shiraberu/taxanswer/shotoku/2020.htm">nta.go.jp/…/taxanswer/shotoku/2020.htm</a></li>
+      <li>国税庁《個人の方に係る復興特別所得税のあらまし》（所得税額の2.1%・2037年まで）<br><a href="https://www.nta.go.jp/taxes/shiraberu/shinkoku/fukko/index.htm">nta.go.jp/…/shinkoku/fukko/index.htm</a></li>
+      <li>財務省《令和8年度税制改正の大綱》（防衛特別所得税の新設／2027年からの付加税内訳の組み替え）<br><a href="https://www.mof.go.jp/tax_policy/tax_reform/outline/fy2026/08taikou_06.htm">mof.go.jp/…/outline/fy2026/08taikou_06.htm</a></li>
+      <li>総務省《ふるさと納税ポータルサイト》（寄附金控除・ワンストップ特例の適用条件）<br><a href="https://www.soumu.go.jp/main_sosiki/jichi_zeisei/czaisei/czaisei_seido/furusato/">soumu.go.jp/…/furusato/</a></li>
+    </ul>
+  </section>
+
+  <div class="foot">日本の居住者・個人・国内FX前提 ／ 税率・制度は2026年時点・作成時点のもの。改正・個別事情で変わります。申告前に一次ソースと税務署・税理士で確認を。</div>
+
+</div>
+
+<script>/* market-desk: テーマ切替（自動→ライト→ダーク）。選択はサイト全体で共有 */
+(function(){
+  var K='md-theme', ORDER=['auto','light','dark'], LBL={auto:'自動',light:'ライト',dark:'ダーク'};
+  var ICON={
+    auto:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 000 18z" fill="currentColor" stroke="none"/></svg>',
+    light:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg>',
+    dark:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 12.8A9 9 0 1111.2 3a7 7 0 009.8 9.8z"/></svg>'
+  };
+  function read(){try{var t=localStorage.getItem(K);if(t==='light'||t==='dark')return t;}catch(e){}return 'auto';}
+  var cur=read();
+  function apply(m){
+    cur=m;
+    var h=document.documentElement;
+    if(m==='auto')h.removeAttribute('data-theme'); else h.setAttribute('data-theme',m);
+    try{ if(m==='auto')localStorage.removeItem(K); else localStorage.setItem(K,m); }catch(e){}
+    var ic=document.getElementById('mdThemeIc'), lb=document.getElementById('mdThemeLbl');
+    if(ic)ic.innerHTML=ICON[m];
+    if(lb)lb.textContent=LBL[m];
+    document.dispatchEvent(new CustomEvent('md:theme',{detail:m}));
+  }
+  function init(){
+    apply(cur);
+    var b=document.getElementById('mdTheme');
+    if(b)b.addEventListener('click',function(){apply(ORDER[(ORDER.indexOf(cur)+1)%3]);});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+</body>
+</html>
